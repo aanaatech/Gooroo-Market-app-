@@ -1,0 +1,3503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gooroo • Marketplace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #f5f7fb; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .phone { max-width: 390px; width: 100%; height: 780px; background: #ffffff; border-radius: 36px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; position: relative; display: flex; flex-direction: column; }
+    #registerOverlay { position: absolute; inset: 0; background: rgba(255,255,255,0.96); backdrop-filter: blur(6px); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; transition: opacity 0.3s ease; overflow-y: auto; }
+    #registerOverlay.hidden { opacity: 0; pointer-events: none; }
+    .register-card { background: white; padding: 2rem 1.8rem; border-radius: 32px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); width: 100%; max-width: 320px; text-align: center; max-height: 90vh; overflow-y: auto; }
+    .register-card h2 { font-weight: 600; font-size: 1.6rem; margin-bottom: 0.3rem; color: #0b1e33; }
+    .register-card .subtitle { color: #5e6f8d; margin-bottom: 1.2rem; font-size: 0.9rem; }
+    .register-card .field-group { margin-bottom: 0.6rem; text-align: left; }
+    .register-card .field-group label { font-size: 0.75rem; font-weight: 600; color: #2d3a4f; display: block; margin-bottom: 3px; }
+    .register-card input { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.95rem; background: #f8fafc; transition: 0.2s; }
+    .register-card input:focus { border-color: #2a7de1; outline: none; background: white; }
+    .register-card input.error { border-color: #e53e3e; background: #fff5f5; }
+    .register-card .error-msg { color: #e53e3e; font-size: 0.7rem; text-align: left; margin: 2px 0 0 8px; display: none; }
+    .register-card .error-msg.show { display: block; }
+    .register-card .password-hint { font-size: 0.65rem; color: #6c7e99; text-align: left; margin: 2px 0 0 8px; }
+    .register-card .register-btn { width: 100%; padding: 14px; background: #0b1e33; color: white; border: none; border-radius: 60px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+    .register-card .register-btn:hover { background: #1a314b; }
+    .register-card .register-footer { margin-top: 12px; font-size: 0.75rem; color: #6c7e99; }
+    .register-card .toggle-mode { font-size: 0.85rem; margin-top: 10px; }
+    .register-card .toggle-mode span { color: #2a7de1; cursor: pointer; font-weight: 600; }
+    .register-card .toggle-mode span:hover { text-decoration: underline; }
+    .register-card .login-mode { display: none; }
+    .register-card.login-mode .login-mode { display: block; }
+    .register-card.login-mode .register-mode { display: none; }
+    .app-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f9fafc; }
+    .header { background: white; padding: 10px 16px 6px; border-bottom: 1px solid #edf2f7; flex-shrink: 0; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; }
+    .header-top h1 { font-size: 1.2rem; font-weight: 600; color: #0b1e33; }
+    .header-top h1 span { font-weight: 300; }
+    .header-actions { display: flex; gap: 14px; font-size: 1.2rem; color: #2d3a4f; position: relative; }
+    .header-actions i { cursor: pointer; position: relative; }
+    .header-actions .badge-dot { position: absolute; top: -4px; right: -6px; width: 8px; height: 8px; background: #e53e3e; border-radius: 50%; border: 2px solid white; display: none; }
+    .header-actions .badge-dot.show { display: block; }
+    .header-tabs { display: flex; gap: 2px; padding: 2px 0; }
+    .header-tab { flex: 1; text-align: center; padding: 6px 0 8px; font-size: 0.8rem; font-weight: 500; color: #8395b0; cursor: pointer; border-radius: 30px; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; position: relative; }
+    .header-tab i { font-size: 1rem; }
+    .header-tab.active { color: #0b1e33; background: #f0f4fe; }
+    .header-tab:hover { background: #f5f7fc; }
+    .badge { background: #e53e3e; color: white; font-size: 0.6rem; padding: 1px 6px; border-radius: 30px; margin-left: 2px; font-weight: 700; min-width: 18px; text-align: center; display: inline-block; }
+    .badge.hidden { display: none; }
+    .main-content { flex: 1; overflow-y: auto; padding: 16px 14px 10px; display: flex; flex-direction: column; }
+    .tab-content { display: none; flex-direction: column; gap: 16px; animation: fade 0.2s ease; }
+    .tab-content.active { display: flex; }
+    @keyframes fade { 0% { opacity: 0.6; transform: translateY(4px); } 100% { opacity: 1; transform: translateY(0); } }
+    .product-card { background: white; border-radius: 24px; padding: 14px 14px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border: 1px solid #edf2f7; }
+    .product-img { width: 100%; height: 200px; background: #eef2f6; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: #7f8fa3; font-size: 0.9rem; margin-bottom: 12px; overflow: hidden; position: relative; cursor: pointer; }
+    .product-img img { width: 100%; height: 100%; object-fit: cover; }
+    .product-img .placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #b0c0d4; }
+    .product-img .placeholder i { font-size: 2.6rem; }
+    .product-img .placeholder span { font-size: 0.7rem; }
+    .product-title { font-weight: 600; font-size: 1.05rem; color: #0b1e33; margin-bottom: 4px; }
+    .product-price { font-size: 1.2rem; font-weight: 700; color: #2a7de1; margin: 4px 0 8px; }
+    .product-price .currency { font-size: 0.8rem; font-weight: 400; color: #64748b; }
+    .product-desc { color: #3e4e66; font-size: 0.9rem; margin-bottom: 10px; line-height: 1.4; }
+    .product-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748b; margin-bottom: 6px; }
+    .product-meta .seller { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .product-meta .seller .avatar { width: 24px; height: 24px; border-radius: 50%; background: #d0dbe9; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; font-size: 0.7rem; }
+    .product-meta .seller .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .buy-section { background: #f2f6fd; padding: 10px 12px; border-radius: 60px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 10px 0 8px; }
+    .buy-section span { font-weight: 500; color: #0b1e33; font-size: 0.8rem; }
+    .buy-btn { background: #0b1e33; color: white; border: none; padding: 6px 18px; border-radius: 60px; font-weight: 600; font-size: 0.8rem; margin-left: auto; cursor: pointer; transition: 0.15s; }
+    .buy-btn.bought { background: #22c55e; color: white; cursor: default; }
+    .stats-row { display: flex; gap: 18px; padding: 6px 4px 2px; font-size: 0.75rem; color: #2f486b; background: #f8faff; border-radius: 30px; margin: 4px 0 2px; }
+    .stats-row .stat-item { display: flex; align-items: center; gap: 4px; cursor: default; }
+    .stats-row .stat-item i { font-size: 0.85rem; color: #3e6b9e; width: 18px; text-align: center; }
+    .stats-row .stat-item .count { font-weight: 600; min-width: 18px; }
+    .stats-row .stat-item.like-btn { cursor: pointer; padding: 2px 8px 2px 4px; border-radius: 40px; transition: 0.1s; }
+    .stats-row .stat-item.like-btn:hover { background: #e8effa; }
+    .stats-row .stat-item.like-btn.liked i { color: #e53e3e; }
+    .post-btn { background: #0b1e33; color: white; padding: 12px 18px; border-radius: 60px; text-align: center; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; box-shadow: 0 4px 12px rgba(11, 30, 51, 0.15); }
+    .post-btn:hover { background: #1a314b; transform: scale(1.01); }
+    .post-btn i { font-size: 1.1rem; }
+    .loading { text-align: center; padding: 20px; color: #8296b0; }
+    .profile-header { display: flex; align-items: center; gap: 18px; background: white; padding: 16px 14px; border-radius: 28px; border: 1px solid #edf2f7; margin-bottom: 12px; }
+    .profile-pic { width: 72px; height: 72px; border-radius: 60px; background: #d0dbe9; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: #2d4b6e; overflow: hidden; cursor: pointer; position: relative; flex-shrink: 0; }
+    .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-pic i { background: rgba(255,255,255,0.6); padding: 8px; border-radius: 60px; }
+    .profile-pic input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .profile-name { font-weight: 600; font-size: 1.2rem; }
+    .profile-stats { color: #4e6a8a; font-size: 0.8rem; }
+    .profile-counts { display: flex; gap: 20px; justify-content: center; padding: 12px 0; background: white; border-radius: 20px; border: 1px solid #edf2f7; margin-bottom: 12px; }
+    .profile-counts .count-item { text-align: center; }
+    .profile-counts .count-item .num { font-weight: 700; font-size: 1.1rem; color: #0b1e33; }
+    .profile-counts .count-item .label { font-size: 0.7rem; color: #64748b; }
+    .profile-posts-container { display: flex; flex-direction: column; gap: 16px; }
+    .image-viewer { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 900; justify-content: center; align-items: center; padding: 20px; }
+    .image-viewer.open { display: flex; }
+    .image-viewer .close-viewer { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; z-index: 901; }
+    .image-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+    .settings-drawer { position: absolute; top: 0; right: -280px; width: 280px; height: 100%; background: white; box-shadow: -8px 0 30px rgba(0,0,0,0.08); transition: right 0.25s ease; z-index: 500; padding: 24px 18px; display: flex; flex-direction: column; gap: 12px; border-left: 1px solid #edf2f7; }
+    .settings-drawer.open { right: 0; }
+    .settings-drawer .close-drawer { align-self: flex-end; font-size: 1.4rem; cursor: pointer; color: #2d3a4f; }
+    .settings-drawer .drawer-section { border-top: 1px solid #edf2f7; padding-top: 12px; margin-top: 4px; }
+    .drawer-item { background: #f8fafc; padding: 12px 14px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eef2f6; }
+    .drawer-item .item-actions i { margin-left: 10px; color: #3e5a7a; cursor: pointer; }
+    .drawer-item .item-actions i:hover { color: #0b1e33; }
+    .logout-btn { width: 100%; padding: 12px; background: #e53e3e; color: white; border: none; border-radius: 60px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .logout-btn:hover { background: #c0392b; }
+    .drawer-backdrop { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.1); z-index: 499; }
+    .drawer-backdrop.active { display: block; }
+    .profile-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 800; justify-content: center; align-items: center; padding: 20px; }
+    .profile-modal.open { display: flex; }
+    .profile-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .profile-modal .modal-box .close-modal { float: right; font-size: 1.4rem; cursor: pointer; color: #2d3a4f; }
+    .profile-modal .modal-box .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: #d0dbe9; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto 12px; font-size: 2.5rem; color: #2d4b6e; }
+    .profile-modal .modal-box .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-modal .modal-box .profile-name-modal { text-align: center; font-size: 1.3rem; font-weight: 600; color: #0b1e33; }
+    .profile-modal .modal-box .profile-badge { text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 12px; }
+    .profile-modal .modal-box .profile-counts-modal { display: flex; gap: 20px; justify-content: center; padding: 12px 0; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; margin-bottom: 12px; }
+    .profile-modal .modal-box .profile-counts-modal .count-item { text-align: center; }
+    .profile-modal .modal-box .profile-counts-modal .count-item .num { font-weight: 700; font-size: 1.1rem; color: #0b1e33; }
+    .profile-modal .modal-box .profile-counts-modal .count-item .label { font-size: 0.7rem; color: #64748b; }
+    .profile-modal .modal-box .profile-posts-modal { display: flex; flex-direction: column; gap: 8px; }
+    .profile-modal .modal-box .profile-posts-modal .post-item-modal { padding: 8px 12px; background: #f8fafc; border-radius: 16px; border: 1px solid #edf2f7; font-size: 0.85rem; }
+    .profile-modal .modal-box .follow-btn-modal { width: 100%; padding: 10px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; margin-top: 12px; }
+    .profile-modal .modal-box .follow-btn-modal.following { background: #0b1e33; color: white; }
+    .profile-modal .modal-box .follow-btn-modal:not(.following) { background: #eef2f6; color: #0b1e33; }
+    .search-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: flex-start; padding-top: 60px; }
+    .search-modal.open { display: flex; }
+    .search-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 90%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .search-modal .modal-box input { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.95rem; margin-bottom: 12px; background: #f8fafc; transition: 0.2s; }
+    .search-modal .modal-box .search-results { max-height: 200px; overflow-y: auto; }
+    .search-modal .modal-box .search-results .result-item { padding: 8px 12px; border-bottom: 1px solid #edf2f7; cursor: pointer; }
+    .notif-panel { display: none; position: absolute; top: 60px; right: 10px; width: 280px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 999; padding: 16px; max-height: 300px; overflow-y: auto; border: 1px solid #edf2f7; }
+    .notif-panel.open { display: block; }
+    .notif-panel .notif-item { padding: 8px 0; border-bottom: 1px solid #f5f7fc; font-size: 0.85rem; }
+    .notif-panel .notif-item .time { font-size: 0.65rem; color: #8296b0; }
+    .bottom-nav { display: none; }
+    .post-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; padding: 30px; }
+    .post-modal.open { display: flex; }
+    .post-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .post-modal .modal-box h3 { margin-bottom: 12px; font-weight: 600; color: #0b1e33; }
+    .post-modal .modal-box .image-preview { width: 100%; height: 150px; background: #eef2f6; border-radius: 18px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; border: 2px dashed #dce3ec; }
+    .post-modal .modal-box .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .post-modal .modal-box .image-preview .placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #b0c0d4; }
+    .post-modal .modal-box input, .post-modal .modal-box textarea { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.9rem; margin-bottom: 10px; background: #f8fafc; transition: 0.2s; }
+    .post-modal .modal-box textarea { border-radius: 20px; min-height: 60px; resize: vertical; }
+    .post-modal .modal-box .file-input-wrap { margin-bottom: 10px; }
+    .post-modal .modal-box .file-input-wrap input[type="file"] { width: 100%; padding: 10px; border-radius: 20px; border: 1px solid #e2e8f0; }
+    .post-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+    .post-modal .modal-actions button { padding: 10px 20px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .post-modal .modal-actions .cancel-btn { background: #edf2f7; color: #2d3a4f; }
+    .post-modal .modal-actions .confirm-btn { background: #0b1e33; color: white; }
+    .chat-user-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+    .chat-user-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 30px; cursor: pointer; transition: 0.15s; background: white; border: 1px solid #edf2f7; }
+    .chat-user-item .avatar { width: 40px; height: 40px; border-radius: 50%; background: #d0dbe9; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; font-size: 1.2rem; color: #2d4b6e; cursor: pointer; }
+    .chat-user-item .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-user-item .user-info { flex: 1; cursor: pointer; }
+    .chat-user-item .user-info .name { font-weight: 600; font-size: 0.9rem; color: #0b1e33; }
+    .chat-user-item .user-info .last-msg { font-size: 0.75rem; color: #8296b0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .chat-user-item .unread-badge { background: #e53e3e; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 30px; font-weight: 700; }
+    .chat-messages-container { flex: 1; display: flex; flex-direction: column; }
+    .chat-messages-container .chat-header { display: flex; align-items: center; gap: 12px; padding: 8px 0 12px; border-bottom: 1px solid #edf2f7; margin-bottom: 8px; }
+    .chat-messages-container .chat-header .back-btn { cursor: pointer; font-size: 1.2rem; color: #2d3a4f; }
+    .chat-messages-container .chat-header .chat-with { font-weight: 600; font-size: 1rem; color: #0b1e33; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .chat-messages-container .chat-header .chat-with .avatar { width: 32px; height: 32px; border-radius: 50%; background: #d0dbe9; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; font-size: 0.9rem; color: #2d4b6e; }
+    .chat-messages-container .chat-header .chat-with .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-container { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; flex: 1; overflow-y: auto; max-height: 320px; }
+    .chat-message { display: flex; flex-direction: column; max-width: 85%; padding: 10px 14px; border-radius: 18px; position: relative; word-wrap: break-word; }
+    .chat-message.sent { align-self: flex-end; background: #0b1e33; color: white; border-bottom-right-radius: 4px; }
+    .chat-message.received { align-self: flex-start; background: white; color: #1f334b; border: 1px solid #edf2f7; border-bottom-left-radius: 4px; }
+    .chat-message .sender { font-size: 0.7rem; font-weight: 600; margin-bottom: 2px; }
+    .chat-message.sent .sender { color: #a0c4ff; }
+    .chat-message.received .sender { color: #0b1e33; }
+    .chat-message .msg { font-size: 0.9rem; line-height: 1.4; }
+    .chat-message .time { font-size: 0.6rem; opacity: 0.7; margin-top: 4px; align-self: flex-end; }
+    .chat-input-wrap { display: flex; gap: 8px; margin-top: 8px; background: white; padding: 6px 10px; border-radius: 60px; border: 1px solid #e2e8f0; }
+    .chat-input-wrap input { flex: 1; border: none; padding: 8px 0; font-size: 0.9rem; outline: none; background: transparent; }
+    .chat-input-wrap button { background: #0b1e33; color: white; border: none; border-radius: 60px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
+    .approve-btn { background: #eab308; color: #0b1e33; border: none; padding: 4px 14px; border-radius: 60px; font-weight: 600; font-size: 0.7rem; cursor: pointer; transition: 0.15s; margin-left: auto; }
+    .approve-btn:hover { background: #ca8a04; }
+    .approve-btn.approved { background: #22c55e; color: white; cursor: default; }
+    .approve-status { font-size: 0.7rem; color: #22c55e; font-weight: 600; margin-left: 8px; display: none; }
+    .approve-status.show { display: inline; }
+    .payment-methods { display: none; background: #f8faff; border-radius: 20px; padding: 12px 14px; margin-top: 6px; border: 1px solid #e2ecf9; flex-direction: column; gap: 8px; }
+    .payment-methods.open { display: flex; }
+    .payment-methods .method { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #1f334b; padding: 6px 8px; background: white; border-radius: 40px; border: 1px solid #edf2f7; cursor: pointer; transition: 0.15s; }
+    .payment-methods .method:hover { background: #f0f4fe; }
+    .payment-methods .method i { width: 22px; color: #2a7de1; font-size: 0.9rem; }
+    .payment-methods .method .label { font-weight: 500; color: #0b1e33; }
+    .payment-methods .method .sub-label { font-size: 0.65rem; color: #6c7e99; }
+    .ethio-payment-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 30px; }
+    .ethio-payment-modal.open { display: flex; }
+    .ethio-payment-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .ethio-payment-modal .modal-box h3 { margin-bottom: 8px; font-weight: 600; color: #0b1e33; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ethio-payment-modal .modal-box .method-badge { display: inline-block; padding: 2px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; }
+    .ethio-payment-modal .modal-box .method-badge.telebirr { background: #1a73e8; color: white; }
+    .ethio-payment-modal .modal-box .method-badge.ebirr { background: #eab308; color: #0b1e33; }
+    .ethio-payment-modal .modal-box .method-badge.bank { background: #2d3a4f; color: white; }
+    .ethio-payment-modal .modal-box p { font-size: 0.85rem; color: #3e4e66; margin-bottom: 12px; }
+    .ethio-payment-modal .modal-box .instruction-box { background: #f0f4fe; border-radius: 16px; padding: 12px; margin-bottom: 12px; border-left: 3px solid #2a7de1; }
+    .ethio-payment-modal .modal-box .instruction-box .step { font-size: 0.8rem; color: #1f334b; padding: 4px 0; display: flex; align-items: flex-start; gap: 8px; }
+    .ethio-payment-modal .modal-box .instruction-box .step .num { background: #2a7de1; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .ethio-payment-modal .modal-box .field-group { margin-bottom: 10px; }
+    .ethio-payment-modal .modal-box .field-group label { font-size: 0.7rem; font-weight: 600; color: #2d3a4f; display: block; margin-bottom: 3px; }
+    .ethio-payment-modal .modal-box .field-group input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.9rem; background: #f8fafc; transition: 0.2s; }
+    .ethio-payment-modal .modal-box .field-group input:focus { border-color: #2a7de1; outline: none; background: white; }
+    .ethio-payment-modal .modal-box .field-group .hint { font-size: 0.65rem; color: #6c7e99; margin-top: 2px; }
+    .ethio-payment-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+    .ethio-payment-modal .modal-actions button { padding: 10px 20px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .ethio-payment-modal .modal-actions .cancel-btn { background: #edf2f7; color: #2d3a4f; }
+    .ethio-payment-modal .modal-actions .confirm-btn { background: #0b1e33; color: white; }
+    .screenshot-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; padding: 30px; }
+    .screenshot-modal.open { display: flex; }
+    .screenshot-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .screenshot-modal .modal-box h3 { margin-bottom: 12px; font-weight: 600; color: #0b1e33; }
+    .screenshot-modal .modal-box p { font-size: 0.9rem; color: #3e4e66; margin-bottom: 16px; }
+    .screenshot-modal .modal-box input[type="file"] { width: 100%; padding: 10px; border: 2px dashed #dce3ec; border-radius: 20px; background: #f8fafc; margin-bottom: 16px; cursor: pointer; }
+    .screenshot-modal .modal-box .upload-info { font-size: 0.75rem; color: #6c7e99; margin-top: -8px; margin-bottom: 12px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-actions button { padding: 10px 20px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .modal-actions .cancel-btn { background: #edf2f7; color: #2d3a4f; }
+    .modal-actions .confirm-btn { background: #0b1e33; color: white; }
+    .following-list { margin-top: 8px; }
+    .following-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #edf2f7; font-size: 0.85rem; }
+    .follow-btn { background: #eef2f6; border: none; padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; color: #0b1e33; cursor: pointer; transition: 0.15s; }
+    .follow-btn.following { background: #0b1e33; color: white; }
+    .follow-btn:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+<div class="phone" id="app">
+  <!-- Registration / Login Overlay -->
+  <div id="registerOverlay">
+    <div class="register-card" id="registerCard">
+      <div class="register-mode">
+        <h2>👋 Create Account</h2>
+        <p class="subtitle">Join Gooroo Marketplace</p>
+        <div class="field-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Your full name">
+        </div>
+        <div class="field-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" placeholder="name@example.com">
+          <div class="error-msg" id="emailError">Please enter a valid email address</div>
+        </div>
+        <div class="field-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="Min 6 characters">
+          <div class="error-msg" id="passwordError">Password must be at least 6 characters</div>
+          <div class="password-hint">Use at least 6 characters</div>
+        </div>
+        <div class="field-group">
+          <label>Confirm Password</label>
+          <input type="password" id="regConfirmPassword" placeholder="Confirm your password">
+          <div class="error-msg" id="confirmError">Passwords do not match</div>
+        </div>
+        <button class="register-btn" id="registerBtn">Create Account →</button>
+        <div class="register-footer" id="regInfo">First user becomes Admin</div>
+        <div class="toggle-mode">Already have an account? <span onclick="toggleAuthMode()">Login</span></div>
+      </div>
+      
+      <div class="login-mode">
+        <h2>👋 Welcome Back</h2>
+        <p class="subtitle">Login to your account</p>
+        <div class="field-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="name@example.com">
+          <div class="error-msg" id="loginEmailError">Please enter your email</div>
+        </div>
+        <div class="field-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password">
+          <div class="error-msg" id="loginPasswordError">Please enter your password</div>
+        </div>
+        <button class="register-btn" id="loginBtn">Login →</button>
+        <div class="register-footer">Welcome back to Gooroo</div>
+        <div class="toggle-mode">Don't have an account? <span onclick="toggleAuthMode()">Register</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Modals -->
+  <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
+    <span class="close-viewer" onclick="closeImageViewer()"><i class="fas fa-times"></i></span>
+    <img id="viewerImage" src="" alt="Full size">
+  </div>
+
+  <div class="profile-modal" id="profileModal">
+    <div class="modal-box">
+      <span class="close-modal" onclick="closeProfileModal()"><i class="fas fa-times"></i></span>
+      <div class="profile-avatar" id="modalAvatar"><i class="fas fa-user-circle"></i></div>
+      <div class="profile-name-modal" id="modalName">User</div>
+      <div class="profile-badge" id="modalBadge"></div>
+      <div class="profile-counts-modal">
+        <div class="count-item"><div class="num" id="modalPosts">0</div><div class="label">Posts</div></div>
+        <div class="count-item"><div class="num" id="modalFollowers">0</div><div class="label">Followers</div></div>
+        <div class="count-item"><div class="num" id="modalCustomers">0</div><div class="label">Customers</div></div>
+      </div>
+      <div style="font-weight:500; margin-bottom:8px;">📦 Posts</div>
+      <div class="profile-posts-modal" id="modalPostsList"></div>
+      <button class="follow-btn-modal" id="modalFollowBtn" onclick="modalFollowAction()">Follow</button>
+    </div>
+  </div>
+
+  <!-- POST MODAL WITH PREVIEW FEATURE -->
+  <div class="post-modal" id="postModal">
+    <div class="modal-box">
+      <h3>📸 Post Your Product</h3>
+      <div class="image-preview" id="postImagePreview">
+        <div class="placeholder">
+          <i class="fas fa-image"></i>
+          <span>Select an image</span>
+        </div>
+      </div>
+      <div class="file-input-wrap">
+        <input type="file" id="postImageInput" accept="image/*" capture="environment">
+      </div>
+      <input type="text" id="postTitle" placeholder="Product title *">
+      <input type="text" id="postPrice" placeholder="Price (e.g. 2500 ETB) *">
+      <textarea id="postDesc" placeholder="Product description *"></textarea>
+      <input type="text" id="postBank" placeholder="Bank account (name & number) *" value="1000 1234567890 (A. Tadesse)">
+      <div class="hint" style="font-size:0.7rem; color:#6c7e99; margin:-6px 0 10px 8px;">Ethiopian bank accounts: 10 digits</div>
+      <input type="text" id="postEbirr" placeholder="eBirr number *" value="0911 223344">
+      <input type="text" id="postTelebirr" placeholder="Telebirr number *" value="0922 334455">
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closePostModal()">Cancel</button>
+        <button class="confirm-btn" onclick="confirmPost()">Post Product</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-modal" id="searchModal">
+    <div class="modal-box">
+      <h3>🔍 Search Products</h3>
+      <input type="text" id="searchInput" placeholder="Search by title or seller..." oninput="performSearch(this.value)">
+      <div class="search-results" id="searchResults"></div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeSearch()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notif-panel" id="notifPanel">
+    <h4 style="margin-bottom: 8px;">🔔 Notifications</h4>
+    <div id="notifList">
+      <div class="notif-item" style="color: #8296b0; text-align: center;">No new notifications</div>
+    </div>
+  </div>
+
+  <div class="ethio-payment-modal" id="ethioPaymentModal">
+    <div class="modal-box">
+      <h3>
+        <span id="ethioPaymentIcon"><i class="fas fa-mobile-alt"></i></span>
+        <span id="ethioPaymentTitle">Telebirr Payment</span>
+        <span class="method-badge" id="ethioPaymentBadge">Telebirr</span>
+      </h3>
+      <p id="ethioPaymentDesc">Complete your payment using Ethio Telecom's mobile money service.</p>
+      <div class="instruction-box" id="ethioInstructions">
+        <div class="step"><span class="num">1</span> Dial <strong>*127#</strong> on your Ethio Telecom SIM</div>
+        <div class="step"><span class="num">2</span> Select "Send Money"</div>
+        <div class="step"><span class="num">3</span> Enter the seller's number: <strong id="sellerPhoneDisplay">09XX XXX XXX</strong></div>
+        <div class="step"><span class="num">4</span> Enter amount: <strong id="amountDisplay">0 ETB</strong></div>
+        <div class="step"><span class="num">5</span> Enter your PIN to confirm</div>
+        <div class="step"><span class="num">6</span> Copy the transaction ID from the confirmation SMS</div>
+      </div>
+      <div class="field-group">
+        <label>Transaction ID (from confirmation SMS)</label>
+        <input type="text" id="transactionIdInput" placeholder="e.g. TBT-2026-123456">
+        <div class="hint">Enter the transaction ID you received via SMS from Ethio Telecom</div>
+      </div>
+      <div class="field-group">
+        <label>Your Phone Number (registered with Telebirr/eBirr)</label>
+        <input type="text" id="senderPhoneInput" placeholder="09XX XXX XXX">
+        <div class="hint">The phone number you used to send the money</div>
+      </div>
+      <div class="field-group">
+        <label>Sender Name (as registered)</label>
+        <input type="text" id="senderNameInput" placeholder="Your full name">
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeEthioPaymentModal()">Cancel</button>
+        <button class="confirm-btn" id="ethioConfirmBtn" onclick="confirmEthioPayment()">Submit Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screenshot-modal" id="screenshotModal">
+    <div class="modal-box">
+      <h3>📸 Upload Screenshot</h3>
+      <p>Please upload a screenshot of your payment confirmation from Ethio Telecom.</p>
+      <input type="file" id="screenshotInput" accept="image/*">
+      <div class="upload-info">This helps the seller verify your payment quickly</div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeScreenshotModal()">Skip</button>
+        <button class="confirm-btn" onclick="confirmScreenshot()">Upload & Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <div class="settings-drawer" id="settingsDrawer">
+    <div class="close-drawer" id="closeDrawer"><i class="fas fa-times"></i></div>
+    <h4>⚙️ Manage Posts</h4>
+    <div id="drawerPostList"></div>
+    <div class="edit-info" id="editSection" style="display: none;">
+      <input type="text" id="editInput" placeholder="new description">
+      <button onclick="saveEdit()">Save</button>
+    </div>
+    <div class="drawer-section">
+      <button class="logout-btn" onclick="logoutUser()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+    <div style="margin-top: auto; font-size:0.7rem; color:#7f8fa3;">• only you can delete/edit</div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container">
+    <div class="header">
+      <div class="header-top">
+        <h1>Gooroo<span style="font-weight:300;">Market</span></h1>
+        <div class="header-actions">
+          <i class="fas fa-search" onclick="openSearch()"></i>
+          <i class="fas fa-bell" onclick="toggleNotifications()">
+            <span class="badge-dot" id="notifDot"></span>
+          </i>
+          <i class="fas fa-cog" id="settingsDrawerBtn" style="cursor:pointer;"></i>
+        </div>
+      </div>
+      <div class="header-tabs">
+        <div class="header-tab active" data-tab="tabHome" id="homeTab">
+          <i class="fas fa-home"></i> Home
+          <span class="badge hidden" id="homeBadge">0</span>
+        </div>
+        <div class="header-tab" data-tab="tabChat" id="chatTab">
+          <i class="fas fa-comment-dots"></i> Chat
+          <span class="badge hidden" id="chatBadge">0</span>
+        </div>
+        <div class="header-tab" data-tab="tabProfile"><i class="fas fa-user-circle"></i> Profile</div>
+      </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+      <!-- HOME TAB -->
+      <div class="tab-content active" id="tabHome">
+        <button class="post-btn" onclick="openPostModal()">
+          <i class="fas fa-plus-circle"></i> Post Image
+        </button>
+        <div id="productFeed"><div class="loading">Loading products...</div></div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div class="tab-content" id="tabChat">
+        <div class="chat-user-list" id="chatUserList"><div class="loading">Loading users...</div></div>
+        <div class="chat-messages-container" id="chatMessagesContainer" style="display:none;">
+          <div class="chat-header">
+            <span class="back-btn" onclick="closeChat()"><i class="fas fa-arrow-left"></i></span>
+            <span class="chat-with" id="chatWithUser" onclick="openProfileFromChat()">
+              <span class="avatar" id="chatAvatar"><i class="fas fa-user-circle"></i></span>
+              <span id="chatUserName">User</span>
+            </span>
+          </div>
+          <div class="chat-container" id="chatMessages"></div>
+          <div class="chat-input-wrap">
+            <input type="text" id="chatInput" placeholder="Type a message...">
+            <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+        <div id="chatEmptyState" style="text-align:center; padding:40px 0; color:#8296b0;">
+          <i class="fas fa-comments" style="font-size:2.5rem; margin-bottom:12px; display:block;"></i>
+          <p>Select a user to start chatting</p>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div class="tab-content" id="tabProfile">
+        <div class="profile-header">
+          <div class="profile-pic" id="profilePic">
+            <i class="fas fa-user-circle"></i>
+            <input type="file" id="profilePicInput" accept="image/*">
+          </div>
+          <div>
+            <div class="profile-name" id="profileName">User</div>
+            <div class="profile-stats"><i class="fas fa-clock"></i> joined <span id="profileJoinDate">today</span></div>
+          </div>
+        </div>
+        <div class="profile-counts" id="profileCounts">
+          <div class="count-item"><div class="num" id="countPosts">0</div><div class="label">Posts</div></div>
+          <div class="count-item"><div class="num" id="countFollowers">0</div><div class="label">Followers</div></div>
+          <div class="count-item"><div class="num" id="countCustomers">0</div><div class="label">Customers</div></div>
+        </div>
+        <div style="font-weight:500; margin: 4px 0 6px;">📦 my posts</div>
+        <div class="profile-posts-container" id="profilePosts"></div>
+        <div style="margin-top:12px; font-size:0.7rem; color:#4f6f92;">click profile pic to change</div>
+        <div style="margin-top:12px; font-weight:500;">👥 Following (<span id="followingCount">0</span>)</div>
+        <div id="followingList" class="following-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  //  🔥 FIREBASE CONFIGURATION
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDQjC32qPzEfpFHY4SpjSB1BwGFQhkPlCY",
+    authDomain: "gooroomarket-46def.firebaseapp.com",
+    databaseURL: "https://gooroomarket-46def-default-rtdb.firebaseio.com",
+    projectId: "gooroomarket-46def",
+    storageBucket: "gooroomarket-46def.firebasestorage.app",
+    messagingSenderId: "962161789078",
+    appId: "1:962161789078:web:aaeb5a48d9fa6cedcf5ab7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  // ============================================================
+  //  STATE
+  // ============================================================
+  let currentUser = null;
+  let posts = [];
+  let messages = [];
+  let allUsers = [];
+  let notifications = [];
+  let selectedChatUserId = null;
+  let postImageData = null;
+  let modalTargetUserId = null;
+  let pendingPostId = null;
+  let selectedMethod = null;
+  let notifOpen = false;
+  let isLoginMode = false;
+
+  // ============================================================
+  //  AUTHENTICATION
+  // ============================================================
+  document.getElementById('registerBtn').addEventListener('click', async function() {
+    const name = document.getElementById('regName').value.trim() || 'User';
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirmPassword').value;
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      alert('Passwords do not match.');
+      return;
+    }
+    
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const firebaseUser = userCredential.user;
+      const usersSnapshot = await db.ref('users').once('value');
+      const isAdmin = !usersSnapshot.exists();
+      
+      const userData = {
+        id: firebaseUser.uid,
+        name: name,
+        email: email,
+        isAdmin: isAdmin,
+        joined: new Date().toISOString(),
+        pic: 'fas fa-user-circle',
+        picData: null,
+        followers: [],
+        following: [],
+        phone: ''
+      };
+      
+      await db.ref('users/' + firebaseUser.uid).set(userData);
+      currentUser = { ...userData, firebaseUser };
+      document.getElementById('registerOverlay').classList.add('hidden');
+      addNotification('✅ Account created! Welcome to Gooroo.', 'system');
+      renderAll();
+      updateBadges();
+      alert(`✅ Welcome ${name}!${isAdmin ? ' You are the Admin.' : ''}`);
+    } catch (error) {
+      alert('❌ Registration failed: ' + error.message);
+    }
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    
+    if (!email || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+    
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const firebaseUser = userCredential.user;
+      const userSnapshot = await db.ref('users/' + firebaseUser.uid).once('value');
+      
+      if (!userSnapshot.exists()) {
+        alert('User data not found.');
+        return;
+      }
+      
+      currentUser = { ...userSnapshot.val(), firebaseUser };
+      document.getElementById('registerOverlay').classList.add('hidden');
+      renderAll();
+      updateBadges();
+      addNotification(`👋 Welcome back, ${currentUser.name}!`, 'system');
+      alert(`✅ Welcome back ${currentUser.name}!`);
+    } catch (error) {
+      alert('❌ Login failed: ' + error.message);
+    }
+  });
+
+  auth.onAuthStateChanged(async (firebaseUser) => {
+    if (firebaseUser && !currentUser) {
+      try {
+        const userSnapshot = await db.ref('users/' + firebaseUser.uid).once('value');
+        if (userSnapshot.exists()) {
+          currentUser = { ...userSnapshot.val(), firebaseUser };
+          document.getElementById('registerOverlay').classList.add('hidden');
+          renderAll();
+          updateBadges();
+        }
+      } catch (error) {
+        console.error('Auth state error:', error);
+      }
+    } else if (!firebaseUser && currentUser) {
+      currentUser = null;
+      document.getElementById('registerOverlay').classList.remove('hidden');
+      renderAll();
+    }
+  });
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    document.getElementById('registerCard').classList.toggle('login-mode', isLoginMode);
+  }
+
+  // ============================================================
+  //  REALTIME DATABASE LISTENERS
+  // ============================================================
+  
+  db.ref('posts').orderByChild('createdAt').on('value', (snapshot) => {
+    posts = [];
+    snapshot.forEach((child) => {
+      posts.push({ id: child.key, ...child.val() });
+    });
+    posts.sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      return 0;
+    });
+    renderPosts();
+    renderProfilePosts();
+    renderDrawer();
+    updateBadges();
+  });
+
+  db.ref('messages').orderByChild('timestamp').on('value', (snapshot) => {
+    messages = [];
+    snapshot.forEach((child) => {
+      messages.push({ id: child.key, ...child.val() });
+    });
+    renderChatUserList();
+    if (selectedChatUserId) renderChatMessages();
+    updateBadges();
+  });
+
+  db.ref('users').on('value', (snapshot) => {
+    allUsers = [];
+    snapshot.forEach((child) => {
+      allUsers.push({ id: child.key, ...child.val() });
+    });
+    renderChatUserList();
+    renderProfile();
+    renderProfilePosts();
+    renderDrawer();
+    updateBadges();
+  });
+
+  db.ref('notifications').orderByChild('timestamp').on('value', (snapshot) => {
+    notifications = [];
+    snapshot.forEach((child) => {
+      notifications.push({ id: child.key, ...child.val() });
+    });
+    renderNotifications();
+    updateNotifBadge();
+  });
+
+  // ============================================================
+  //  NOTIFICATIONS
+  // ============================================================
+  function addNotification(message, type = 'info') {
+    if (!currentUser) return;
+    const newNotifRef = db.ref('notifications').push();
+    newNotifRef.set({
+      userId: currentUser.id,
+      message: message,
+      type: type,
+      read: false,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  function updateNotifBadge() {
+    const unread = notifications.filter(n => !n.read).length;
+    const dot = document.getElementById('notifDot');
+    if (dot) {
+      if (unread > 0) dot.classList.add('show');
+      else dot.classList.remove('show');
+    }
+  }
+
+  function renderNotifications() {
+    const container = document.getElementById('notifList');
+    if (!container) return;
+    if (notifications.length === 0) {
+      container.innerHTML = '<div class="notif-item" style="color: #8296b0; text-align: center;">No notifications</div>';
+      return;
+    }
+    container.innerHTML = notifications.map(n => `
+      <div class="notif-item" style="${n.read ? 'opacity:0.6;' : ''}">
+        ${n.message}
+        <div class="time">${new Date(n.timestamp).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  function toggleNotifications() {
+    notifOpen = !notifOpen;
+    const panel = document.getElementById('notifPanel');
+    if (panel) panel.classList.toggle('open', notifOpen);
+    if (notifOpen) {
+      notifications.forEach(async n => {
+        if (!n.read) {
+          await db.ref('notifications/' + n.id).update({ read: true });
+        }
+      });
+    }
+  }
+
+  // ============================================================
+  //  IMAGE VIEWER
+  // ============================================================
+  function openImageViewer(imageSrc) {
+    if (!imageSrc) return;
+    document.getElementById('viewerImage').src = imageSrc;
+    document.getElementById('imageViewer').classList.add('open');
+  }
+  function closeImageViewer() {
+    document.getElementById('imageViewer').classList.remove('open');
+  }
+
+  // ============================================================
+  //  PROFILE MODAL
+  // ============================================================
+  function openProfileModal(userId) {
+    if (!userId) return;
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    modalTargetUserId = userId;
+    
+    const avatar = document.getElementById('modalAvatar');
+    if (avatar) {
+      if (user.picData) {
+        avatar.innerHTML = `<img src="${user.picData}" alt="${user.name}">`;
+      } else {
+        avatar.innerHTML = `<i class="fas fa-user-circle"></i>`;
+      }
+    }
+    
+    document.getElementById('modalName').textContent = user.name + (user.isAdmin ? ' 👑' : '');
+    document.getElementById('modalBadge').textContent = `Joined ${new Date(user.joined).toLocaleDateString()}`;
+    
+    const userPosts = posts.filter(p => p.userId === userId);
+    document.getElementById('modalPosts').textContent = userPosts.length;
+    document.getElementById('modalFollowers').textContent = user.followers ? user.followers.length : 0;
+    document.getElementById('modalCustomers').textContent = getCustomerCount(userId);
+    
+    const list = document.getElementById('modalPostsList');
+    if (list) {
+      list.innerHTML = userPosts.map(p => `
+        <div class="post-item-modal">
+          <strong>${p.title}</strong>
+          ${p.price ? `<span class="price">${p.price} ETB</span>` : ''}
+          <div style="font-size:0.7rem; color:#8296b0;">${new Date(p.createdAt).toLocaleString()}</div>
+          ${p.buyers > 0 ? `<div style="font-size:0.7rem; color:#22c55e;">✅ ${p.buyers} sold</div>` : ''}
+        </div>
+      `).join('');
+    }
+    
+    const followBtn = document.getElementById('modalFollowBtn');
+    if (followBtn) {
+      const isFollowing = isFollowingUser(userId);
+      followBtn.textContent = isFollowing ? 'Unfollow' : 'Follow';
+      followBtn.className = 'follow-btn-modal' + (isFollowing ? ' following' : '');
+    }
+    
+    document.getElementById('profileModal').classList.add('open');
+  }
+
+  function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('open');
+    modalTargetUserId = null;
+  }
+
+  function modalFollowAction() {
+    if (!modalTargetUserId) return;
+    toggleFollow(modalTargetUserId);
+    openProfileModal(modalTargetUserId);
+  }
+
+  function openProfileFromChat() {
+    if (selectedChatUserId) {
+      openProfileModal(selectedChatUserId);
+    }
+  }
+
+  // ============================================================
+  //  SEARCH
+  // ============================================================
+  function openSearch() {
+    document.getElementById('searchModal').classList.add('open');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchInput').focus();
+    document.getElementById('searchResults').innerHTML = '';
+  }
+  
+  function closeSearch() {
+    document.getElementById('searchModal').classList.remove('open');
+  }
+  
+  function performSearch(query) {
+    const results = document.getElementById('searchResults');
+    if (!results) return;
+    if (!query || query.length < 2) {
+      results.innerHTML = '';
+      return;
+    }
+    const q = query.toLowerCase();
+    const filtered = posts.filter(p => 
+      p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) ||
+      (p.userName && p.userName.toLowerCase().includes(q))
+    );
+    if (filtered.length === 0) {
+      results.innerHTML = '<div style="padding:8px;color:#8296b0;">No results found</div>';
+      return;
+    }
+    results.innerHTML = filtered.map(p => `
+      <div class="result-item" onclick="closeSearch(); switchTab('tabHome'); scrollToPost('${p.id}')">
+        <strong>${p.title}</strong> - ${p.userName || 'Unknown'} - ${p.price || 'No price'}
+        ${p.buyers > 0 ? ' ✅' : ''}
+      </div>
+    `).join('');
+  }
+  
+  function scrollToPost(postId) {
+    setTimeout(() => {
+      const card = document.querySelector(`.product-card[data-postid="${postId}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }
+
+  // ============================================================
+  //  BADGE SYSTEM
+  // ============================================================
+  function updateBadges() {
+    const otherMsgs = messages.filter(m => m.userId !== currentUser?.id);
+    const chatBadge = document.getElementById('chatBadge');
+    if (chatBadge) {
+      if (otherMsgs.length > 0 && !document.getElementById('tabChat').classList.contains('active')) {
+        chatBadge.textContent = otherMsgs.length;
+        chatBadge.classList.remove('hidden');
+      } else {
+        chatBadge.classList.add('hidden');
+      }
+    }
+    
+    const homeBadge = document.getElementById('homeBadge');
+    if (homeBadge) {
+      const homeTab = document.getElementById('tabHome');
+      if (!homeTab?.classList.contains('active') && posts.length > 0) {
+        homeBadge.textContent = posts.length;
+        homeBadge.classList.remove('hidden');
+      } else {
+        homeBadge.classList.add('hidden');
+      }
+    }
+    
+    updateNotifBadge();
+  }
+
+  // ============================================================
+  //  FOLLOW
+  // ============================================================
+  async function toggleFollow(targetUserId) {
+    if (!currentUser) { alert('Please login first'); return; }
+    if (targetUserId === currentUser.id) { alert('You cannot follow yourself'); return; }
+    
+    const current = allUsers.find(u => u.id === currentUser.id);
+    if (!current) return;
+    
+    const idx = current.following ? current.following.indexOf(targetUserId) : -1;
+    
+    if (idx > -1) {
+      current.following.splice(idx, 1);
+    } else {
+      if (!current.following) current.following = [];
+      current.following.push(targetUserId);
+      addNotification(`You started following ${allUsers.find(u => u.id === targetUserId)?.name || 'user'}`, 'follow');
+    }
+    
+    await db.ref('users/' + currentUser.id).update({ following: current.following });
+    currentUser.following = current.following;
+    
+    renderAll();
+  }
+  
+  function isFollowingUser(userId) {
+    if (!currentUser) return false;
+    return currentUser.following && currentUser.following.includes(userId);
+  }
+  
+  function getFollowersCount(userId) {
+    const u = allUsers.find(x => x.id === userId);
+    return u ? (u.followers || []).length : 0;
+  }
+  
+  function getCustomerCount(userId) {
+    const userPosts = posts.filter(p => p.userId === userId);
+    let total = 0;
+    userPosts.forEach(p => { total += (p.buyers || 0); });
+    return total;
+  }
+
+  // ============================================================
+  //  RENDER FUNCTIONS
+  // ============================================================
+  function renderAll() {
+    if (!currentUser) return;
+    renderPosts();
+    renderProfilePosts();
+    renderChatUserList();
+    renderChatMessages();
+    renderProfile();
+    renderDrawer();
+    renderNotifications();
+    updateBadges();
+  }
+
+  // ============================================================
+  //  POSTS
+  // ============================================================
+  function renderPosts() {
+    const feed = document.getElementById('productFeed');
+    if (!feed) return;
+    feed.innerHTML = posts.map(p => generateProductCard(p)).join('');
+  }
+
+  function renderProfilePosts() {
+    const container = document.getElementById('profilePosts');
+    if (!container) return;
+    const myPosts = posts.filter(p => p.userId === currentUser?.id);
+    if (myPosts.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#8296b0;">You haven\'t posted anything yet</div>';
+      return;
+    }
+    container.innerHTML = myPosts.map(p => generateProductCard(p)).join('');
+  }
+
+  // ============================================================
+  //  GENERATE PRODUCT CARD
+  // ============================================================
+  function generateProductCard(p) {
+    const user = allUsers.find(u => u.id === p.userId);
+    const sellerName = user ? user.name : 'Unknown';
+    const isFollowing = isFollowingUser(p.userId);
+    const isSeller = currentUser?.id === p.userId;
+    const isApproved = p.approved || false;
+    const buyerName = p.buyerId ? (allUsers.find(u => u.id === p.buyerId)?.name || 'Someone') : null;
+    
+    const imgHtml = p.imageData ? `<img src="${p.imageData}" alt="Product" onclick="event.stopPropagation(); openImageViewer('${p.imageData}')">` : 
+      `<div class="placeholder"><i class="fas fa-image"></i><span>No photo</span></div>`;
+    const avatarHtml = user?.picData ? `<img src="${user.picData}" alt="${sellerName}">` : `<i class="fas fa-user-circle"></i>`;
+    const priceDisplay = p.price ? `<div class="product-price">${p.price} <span class="currency">ETB</span></div>` : '';
+    const isLiked = p.likedBy && p.likedBy.includes(currentUser?.id);
+    
+    const showApprove = isSeller && p.buyerId && !p.approved;
+    const buyerDisplay = p.buyerId && p.approved ? `✅ Sold to ${buyerName}` : '';
+    const pendingDisplay = p.buyerId && !p.approved && !isSeller ? `⏳ Pending approval` : '';
+    
+    return `
+      <div class="product-card" data-postid="${p.id}">
+        <div class="product-img" onclick="openImageViewer('${p.imageData || ''}')">${imgHtml}</div>
+        <div class="product-title">${p.title}</div>
+        ${priceDisplay}
+        <div class="product-meta">
+          <span class="seller" onclick="openProfileModal('${p.userId}')">
+            <span class="avatar">${avatarHtml}</span>
+            ${sellerName}
+          </span>
+          <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="event.stopPropagation(); toggleFollow('${p.userId}')">
+            ${isFollowing ? 'Following' : 'Follow'}
+          </button>
+        </div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="buy-section">
+          <span><i class="fas fa-shopping-cart"></i> ${p.approved ? 'Sold' : 'Buy'}</span>
+          ${isSeller ? 
+            (showApprove ? 
+              `<button class="approve-btn" onclick="approvePurchase('${p.id}')">✓ Approve</button>` :
+              (p.approved ? `<span class="approve-status show">✅ Approved</span>` : '')
+            ) :
+            (p.approved ? 
+              `<button class="buy-btn bought" disabled><i class="fas fa-check"></i> Buyed ✅</button>` :
+              `<button class="buy-btn" onclick="event.stopPropagation(); initiateBuy('${p.id}')">Buy now</button>`
+            )
+          }
+          ${buyerDisplay ? `<span style="font-size:0.7rem; color:#22c55e; margin-left:8px;">${buyerDisplay}</span>` : ''}
+          ${pendingDisplay ? `<span style="font-size:0.7rem; color:#eab308; margin-left:8px;">${pendingDisplay}</span>` : ''}
+        </div>
+        <div class="payment-methods" id="payment-${p.id}">
+          <div class="method" onclick="selectPaymentMethod('${p.id}', 'bank')">
+            <i class="fas fa-university"></i>
+            <span class="label">Bank:</span> ${p.bank}
+          </div>
+          <div class="method" onclick="selectPaymentMethod('${p.id}', 'telebirr')">
+            <i class="fas fa-comment"></i>
+            <span class="label">Telebirr:</span> ${p.telebirr}
+            <span class="sub-label">(Dial *127#)</span>
+          </div>
+          <div class="method" onclick="selectPaymentMethod('${p.id}', 'ebirr')">
+            <i class="fas fa-mobile-alt"></i>
+            <span class="label">eBirr:</span> ${p.ebirr}
+          </div>
+        </div>
+        <div class="stats-row">
+          <span class="stat-item like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${p.id}')">
+            <i class="fas fa-heart"></i> <span class="count" id="likes-${p.id}">${p.likes || 0}</span>
+          </span>
+          <span class="stat-item"><i class="fas fa-eye"></i> <span class="count" id="views-${p.id}">${p.views || 0}</span></span>
+          <span class="stat-item"><i class="fas fa-user-check"></i> <span class="count" id="buyers-${p.id}">${p.buyers || 0}</span></span>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  //  POST MODAL WITH PREVIEW - FIXED
+  // ============================================================
+  window.openPostModal = function() {
+    if (!currentUser) { alert('Please login first'); return; }
+    document.getElementById('postModal').classList.add('open');
+    document.getElementById('postImagePreview').innerHTML = `<div class="placeholder"><i class="fas fa-image"></i><span>Select an image</span></div>`;
+    document.getElementById('postImageInput').value = '';
+    document.getElementById('postTitle').value = '';
+    document.getElementById('postPrice').value = '';
+    document.getElementById('postDesc').value = '';
+    document.getElementById('postBank').value = '1000 1234567890 (A. Tadesse)';
+    document.getElementById('postEbirr').value = '0911 223344';
+    document.getElementById('postTelebirr').value = '0922 334455';
+    postImageData = null;
+  };
+
+  // IMAGE PREVIEW - FIXED
+  document.getElementById('postImageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) {
+      postImageData = null;
+      document.getElementById('postImagePreview').innerHTML = `<div class="placeholder"><i class="fas fa-image"></i><span>Select an image</span></div>`;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      postImageData = ev.target.result;
+      document.getElementById('postImagePreview').innerHTML = `<img src="${postImageData}" alt="Preview">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function closePostModal() {
+    document.getElementById('postModal').classList.remove('open');
+    postImageData = null;
+  }
+
+  async function confirmPost() {
+    const title = document.getElementById('postTitle').value.trim();
+    const price = document.getElementById('postPrice').value.trim();
+    const desc = document.getElementById('postDesc').value.trim();
+    const bank = document.getElementById('postBank').value.trim();
+    const ebirr = document.getElementById('postEbirr').value.trim();
+    const telebirr = document.getElementById('postTelebirr').value.trim();
+    
+    if (!postImageData) { alert('❌ Please select an image.'); return; }
+    if (!title) { alert('❌ Please enter a product title.'); document.getElementById('postTitle').focus(); return; }
+    if (!price) { alert('❌ Please enter a price.'); document.getElementById('postPrice').focus(); return; }
+    if (!desc) { alert('❌ Please enter a description.'); document.getElementById('postDesc').focus(); return; }
+    if (!bank || !ebirr || !telebirr) { alert('❌ Please enter all payment information.'); return; }
+
+    const newPostRef = db.ref('posts').push();
+    await newPostRef.set({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      title: title,
+      price: price,
+      desc: desc,
+      imageData: postImageData,
+      bank: bank,
+      ebirr: ebirr,
+      telebirr: telebirr,
+      likes: 0,
+      likedBy: [],
+      views: 0,
+      viewed: false,
+      buyers: 0,
+      buyerId: null,
+      approved: false,
+      createdAt: new Date().toISOString()
+    });
+    
+    addNotification(`You posted "${title}" for ${price} ETB`, 'post');
+    closePostModal();
+    alert('✅ Product posted successfully!');
+  }
+
+  // ============================================================
+  //  LOGOUT
+  // ============================================================
+  async function logoutUser() {
+    if (confirm('Are you sure you want to logout?')) {
+      try {
+        await auth.signOut();
+        currentUser = null;
+        closeDrawer();
+        selectedChatUserId = null;
+        document.getElementById('registerOverlay').classList.remove('hidden');
+        addNotification('You have been logged out.', 'system');
+        renderAll();
+      } catch (error) {
+        alert('Logout failed: ' + error.message);
+      }
+    }
+  }
+
+  // ============================================================
+  //  PAYMENT
+  // ============================================================
+  function selectPaymentMethod(postId, method) {
+    if (!currentUser) { alert('Please login first'); return; }
+    pendingPostId = postId;
+    selectedMethod = method;
+    document.querySelectorAll('.payment-methods.open').forEach(el => el.classList.remove('open'));
+    
+    if (method === 'bank') {
+      openEthioPaymentModal('bank', postId);
+    } else if (method === 'telebirr') {
+      openEthioPaymentModal('telebirr', postId);
+    } else if (method === 'ebirr') {
+      openEthioPaymentModal('ebirr', postId);
+    }
+  }
+
+  function openEthioPaymentModal(method, postId) {
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    
+    const modal = document.getElementById('ethioPaymentModal');
+    if (!modal) return;
+    
+    // Set payment method details
+    const title = document.getElementById('ethioPaymentTitle');
+    const icon = document.getElementById('ethioPaymentIcon');
+    const badge = document.getElementById('ethioPaymentBadge');
+    const desc = document.getElementById('ethioPaymentDesc');
+    const instructions = document.getElementById('ethioInstructions');
+    const sellerPhone = document.getElementById('sellerPhoneDisplay');
+    const amountDisplay = document.getElementById('amountDisplay');
+    
+    if (method === 'telebirr') {
+      if (title) title.textContent = 'Telebirr Payment';
+      if (icon) icon.innerHTML = '<i class="fas fa-comment"></i>';
+      if (badge) { badge.textContent = 'Telebirr'; badge.className = 'method-badge telebirr'; }
+      if (desc) desc.textContent = 'Complete your payment using Ethio Telecom\'s Telebirr service. Dial *127# on your Ethio Telecom SIM.';
+      if (sellerPhone) sellerPhone.textContent = p.telebirr || '09XX XXX XXX';
+    } else if (method === 'ebirr') {
+      if (title) title.textContent = 'eBirr Payment';
+      if (icon) icon.innerHTML = '<i class="fas fa-mobile-alt"></i>';
+      if (badge) { badge.textContent = 'eBirr'; badge.className = 'method-badge ebirr'; }
+      if (desc) desc.textContent = 'Complete your payment using eBirr mobile money service.';
+      if (sellerPhone) sellerPhone.textContent = p.ebirr || '09XX XXX XXX';
+    } else {
+      if (title) title.textContent = 'Bank Transfer';
+      if (icon) icon.innerHTML = '<i class="fas fa-university"></i>';
+      if (badge) { badge.textContent = 'Bank'; badge.className = 'method-badge bank'; }
+      if (desc) desc.textContent = 'Complete your payment via bank transfer to the seller\'s account.';
+      if (sellerPhone) sellerPhone.textContent = p.bank || 'Account: 1000 1234567890';
+    }
+    
+    if (amountDisplay) amountDisplay.textContent = p.price || '0 ETB';
+    
+    if (instructions) {
+      if (method === 'telebirr') {
+        instructions.innerHTML = `
+          <div class="step"><span class="num">1</span> Dial <strong>*127#</strong> on your Ethio Telecom SIM</div>
+          <div class="step"><span class="num">2</span> Select "Telebirr" → "Send Money"</div>
+          <div class="step"><span class="num">3</span> Enter seller's Telebirr number: <strong>${p.telebirr || '09XX XXX XXX'}</strong></div>
+          <div class="step"><span class="num">4</span> Enter amount: <strong>${p.price || '0'} ETB</strong></div>
+          <div class="step"><span class="num">5</span> Enter your Telebirr PIN</div>
+          <div class="step"><span class="num">6</span> Copy the transaction ID from the confirmation SMS</div>
+        `;
+      } else if (method === 'ebirr') {
+        instructions.innerHTML = `
+          <div class="step"><span class="num">1</span> Open your eBirr app</div>
+          <div class="step"><span class="num">2</span> Select "Send Money"</div>
+          <div class="step"><span class="num">3</span> Enter seller's eBirr number: <strong>${p.ebirr || '09XX XXX XXX'}</strong></div>
+          <div class="step"><span class="num">4</span> Enter amount: <strong>${p.price || '0'} ETB</strong></div>
+          <div class="step"><span class="num">5</span> Confirm with your eBirr PIN</div>
+          <div class="step"><span class="num">6</span> Copy the transaction ID from the confirmation</div>
+        `;
+      } else {
+        instructions.innerHTML = `
+          <div class="step"><span class="num">1</span> Go to your bank's mobile app or branch</div>
+          <div class="step"><span class="num">2</span> Transfer to seller's account: <strong>${p.bank || 'Account: 1000 1234567890'}</strong></div>
+          <div class="step"><span class="num">3</span> Enter amount: <strong>${p.price || '0'} ETB</strong></div>
+          <div class="step"><span class="num">4</span> Add reference: "Gooroo-${p.id.substring(0, 8)}"</div>
+          <div class="step"><span class="num">5</span> Copy the transaction reference number</div>
+        `;
+      }
+    }
+    
+    document.getElementById('transactionIdInput').value = '';
+    document.getElementById('senderPhoneInput').value = currentUser?.phone || '';
+    document.getElementById('senderNameInput').value = currentUser?.name || '';
+    
+    modal.classList.add('open');
+  }
+
+  function closeEthioPaymentModal() {
+    document.getElementById('ethioPaymentModal').classList.remove('open');
+    pendingPostId = null;
+    selectedMethod = null;
+  }
+
+  async function confirmEthioPayment() {
+    const transactionId = document.getElementById('transactionIdInput').value.trim();
+    const senderPhone = document.getElementById('senderPhoneInput').value.trim();
+    const senderName = document.getElementById('senderNameInput').value.trim();
+    
+    if (!transactionId) {
+      alert('❌ Please enter the transaction ID from your Ethio Telecom confirmation SMS.');
+      document.getElementById('transactionIdInput').focus();
+      return;
+    }
+    if (!senderPhone) {
+      alert('❌ Please enter your phone number.');
+      document.getElementById('senderPhoneInput').focus();
+      return;
+    }
+    if (!senderName) {
+      alert('❌ Please enter your name.');
+      document.getElementById('senderNameInput').focus();
+      return;
+    }
+    
+    if (!pendingPostId) {
+      alert('Error: No product selected.');
+      return;
+    }
+    
+    const p = posts.find(x => x.id === pendingPostId);
+    if (!p) {
+      alert('Error: Product not found.');
+      return;
+    }
+    
+    document.getElementById('ethioPaymentModal').classList.remove('open');
+    
+    await db.ref('posts/' + pendingPostId).update({
+      buyerId: currentUser.id,
+      transactionId: transactionId,
+      senderPhone: senderPhone,
+      senderName: senderName,
+      paymentMethod: selectedMethod
+    });
+    
+    const methodName = selectedMethod === 'telebirr' ? 'Telebirr' : 
+                       selectedMethod === 'ebirr' ? 'eBirr' : 'Bank Transfer';
+    
+    addNotification(`📱 Payment submitted via ${methodName} for "${p.title}". Transaction: ${transactionId}`, 'purchase');
+    
+    const seller = allUsers.find(u => u.id === p.userId);
+    if (seller) {
+      addNotification(`📱 ${currentUser.name} paid via ${methodName} for "${p.title}". Transaction: ${transactionId}`, 'purchase');
+    }
+    
+    await db.ref('messages').push({
+      userId: currentUser.id,
+      text: `✅ Payment completed for "${p.title}" via ${methodName}! Transaction ID: ${transactionId}. Waiting for seller approval.`,
+      timestamp: new Date().toISOString()
+    });
+    
+    document.getElementById('screenshotModal').classList.add('open');
+  }
+
+  // ============================================================
+  //  SCREENSHOT MODAL
+  // ============================================================
+  function closeScreenshotModal() {
+    document.getElementById('screenshotModal').classList.remove('open');
+  }
+
+  async function confirmScreenshot() {
+    const fileInput = document.getElementById('screenshotInput');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert('⚠️ No screenshot uploaded. The seller may ask for verification.');
+      document.getElementById('screenshotModal').classList.remove('open');
+      renderAll();
+      alert('✅ Payment submitted! Waiting for seller approval.');
+      return;
+    }
+    
+    const file = fileInput.files[0];
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (screenshot).');
+      return;
+    }
+    
+    if (pendingPostId) {
+      try {
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+          const imageData = ev.target.result;
+          await db.ref('posts/' + pendingPostId).update({
+            screenshot: imageData
+          });
+          addNotification('📸 Screenshot uploaded for verification.', 'purchase');
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Screenshot upload error:', error);
+      }
+    }
+    
+    document.getElementById('screenshotModal').classList.remove('open');
+    document.getElementById('screenshotInput').value = '';
+    renderAll();
+    alert('✅ Payment submitted! Screenshot uploaded. Waiting for seller approval.');
+  }
+
+  // ============================================================
+  //  APPROVE PURCHASE
+  // ============================================================
+  async function approvePurchase(postId) {
+    if (!currentUser) return;
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    if (p.userId !== currentUser.id) {
+      alert('Only the seller can approve this purchase.');
+      return;
+    }
+    if (p.approved) {
+      alert('This purchase has already been approved.');
+      return;
+    }
+    if (!p.buyerId) {
+      alert('No pending purchase to approve.');
+      return;
+    }
+    
+    const buyer = allUsers.find(u => u.id === p.buyerId);
+    const methodName = p.paymentMethod === 'telebirr' ? 'Telebirr' : 
+                       p.paymentMethod === 'ebirr' ? 'eBirr' : 'Bank Transfer';
+    
+    if (confirm(`Approve this purchase from ${buyer?.name || 'buyer'}?\n\nTransaction ID: ${p.transactionId || 'N/A'}\nMethod: ${methodName}\nPhone: ${p.senderPhone || 'N/A'}`)) {
+      await db.ref('posts/' + postId).update({
+        approved: true,
+        buyers: (p.buyers || 0) + 1
+      });
+      
+      if (buyer) {
+        addNotification(`✅ ${currentUser.name} approved your purchase of "${p.title}"!`, 'purchase');
+      }
+      addNotification(`✅ You approved the purchase of "${p.title}"`, 'purchase');
+      
+      await db.ref('messages').push({
+        userId: currentUser.id,
+        text: `✅ Purchase approved for "${p.title}"! Transaction ${p.transactionId || ''} confirmed.`,
+        timestamp: new Date().toISOString()
+      });
+      
+      alert('✅ Purchase approved! The buyer has been notified.');
+    }
+  }
+
+  // ============================================================
+  //  INITIATE BUY
+  // ============================================================
+  async function initiateBuy(postId) {
+    if (!currentUser) { alert('Please login first'); return; }
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    if (p.userId === currentUser.id) { alert('You cannot buy your own product.'); return; }
+    if (p.approved) { alert('This product has already been sold.'); return; }
+    if (p.buyerId && !p.approved) { alert('This product is pending approval from the seller.'); return; }
+    
+    const paymentDiv = document.getElementById(`payment-${postId}`);
+    if (paymentDiv) {
+      document.querySelectorAll('.payment-methods.open').forEach(el => {
+        if (el.id !== `payment-${postId}`) el.classList.remove('open');
+      });
+      paymentDiv.classList.toggle('open');
+    }
+  }
+
+  // ============================================================
+  //  LIKE
+  // ============================================================
+  async function toggleLike(postId) {
+    if (!currentUser) { alert('Please login first'); return; }
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    let likedBy = p.likedBy || [];
+    let likes = p.likes || 0;
+    
+    const idx = likedBy.indexOf(currentUser.id);
+    if (idx > -1) {
+      likedBy.splice(idx, 1);
+      likes = Math.max(0, likes - 1);
+    } else {
+      likedBy.push(currentUser.id);
+      likes += 1;
+      addNotification(`You liked "${p.title}"`, 'like');
+    }
+    await db.ref('posts/' + postId).update({ likedBy, likes });
+  }
+
+  // ============================================================
+  //  CHAT
+  // ============================================================
+  function renderChatUserList() {
+    const container = document.getElementById('chatUserList');
+    if (!container) return;
+    const otherUsers = allUsers.filter(u => u.id !== currentUser?.id);
+    
+    const usersWithLastMsg = otherUsers.map(u => {
+      const userMsgs = messages.filter(m => m.userId === u.id || (m.userId === currentUser?.id && m.recipientId === u.id));
+      const lastMsg = userMsgs.length > 0 ? userMsgs[userMsgs.length - 1] : null;
+      return { ...u, lastMsg, lastMsgTime: lastMsg ? new Date(lastMsg.timestamp) : new Date(0) };
+    });
+    usersWithLastMsg.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
+
+    container.innerHTML = usersWithLastMsg.map(u => {
+      const avatarHtml = u.picData ? `<img src="${u.picData}" alt="${u.name}">` : `<i class="fas fa-user-circle"></i>`;
+      const unread = messages.filter(m => m.userId === u.id && !m.read).length;
+      const lastMsgText = u.lastMsg ? u.lastMsg.text : 'No messages yet';
+      return `
+        <div class="chat-user-item">
+          <div class="avatar" onclick="openProfileModal('${u.id}')">${avatarHtml}</div>
+          <div class="user-info" onclick="openChat('${u.id}')">
+            <div class="name">${u.name} ${u.isAdmin ? '👑' : ''}</div>
+            <div class="last-msg">${lastMsgText}</div>
+          </div>
+          ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+          <div class="user-status">●</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openChat(userId) {
+    selectedChatUserId = userId;
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    document.getElementById('chatEmptyState').style.display = 'none';
+    document.getElementById('chatUserList').style.display = 'none';
+    document.getElementById('chatMessagesContainer').style.display = 'flex';
+    document.getElementById('chatUserName').textContent = user.name;
+    const avatar = document.getElementById('chatAvatar');
+    if (avatar) {
+      if (user.picData) {
+        avatar.innerHTML = `<img src="${user.picData}" alt="${user.name}">`;
+      } else {
+        avatar.innerHTML = `<i class="fas fa-user-circle"></i>`;
+      }
+    }
+    renderChatMessages();
+  }
+
+  function closeChat() {
+    selectedChatUserId = null;
+    document.getElementById('chatEmptyState').style.display = 'block';
+    document.getElementById('chatUserList').style.display = 'flex';
+    document.getElementById('chatMessagesContainer').style.display = 'none';
+    renderChatUserList();
+  }
+
+  function renderChatMessages() {
+    if (!selectedChatUserId) return;
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+    const filtered = messages.filter(m => 
+      (m.userId === currentUser?.id && m.recipientId === selectedChatUserId) ||
+      (m.userId === selectedChatUserId && m.recipientId === currentUser?.id)
+    );
+    filtered.forEach(async m => {
+      if (m.userId === selectedChatUserId && !m.read) {
+        await db.ref('messages/' + m.id).update({ read: true });
+      }
+    });
+
+    container.innerHTML = filtered.map(m => {
+      const isYou = m.userId === currentUser?.id;
+      const sender = allUsers.find(u => u.id === m.userId);
+      const senderName = sender ? sender.name : 'Unknown';
+      const msgClass = isYou ? 'sent' : 'received';
+      return `
+        <div class="chat-message ${msgClass}">
+          <div class="sender">${isYou ? 'You' : senderName}</div>
+          <div class="msg">${m.text}</div>
+          <div class="time">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+        </div>
+      `;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+    updateBadges();
+    renderChatUserList();
+  }
+
+  document.getElementById('sendChatBtn').addEventListener('click', async function() {
+    if (!currentUser) { alert('Please login first'); return; }
+    if (!selectedChatUserId) { alert('Select a user to chat with first.'); return; }
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    await db.ref('messages').push({
+      userId: currentUser.id,
+      recipientId: selectedChatUserId,
+      text: text,
+      timestamp: new Date().toISOString(),
+      read: false
+    });
+    input.value = '';
+  });
+
+  document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') document.getElementById('sendChatBtn').click();
+  });
+
+  // ============================================================
+  //  PROFILE
+  // ============================================================
+  function renderProfile() {
+    if (!currentUser) return;
+    document.getElementById('profileName').textContent = currentUser.name + (currentUser.isAdmin ? ' 👑' : '');
+    document.getElementById('profileJoinDate').textContent = new Date(currentUser.joined).toLocaleDateString();
+    
+    const picEl = document.getElementById('profilePic');
+    if (picEl) {
+      if (currentUser.picData) {
+        picEl.innerHTML = `<img src="${currentUser.picData}" alt="Profile"><input type="file" id="profilePicInput" accept="image/*">`;
+      } else {
+        picEl.innerHTML = `<i class="${currentUser.pic || 'fas fa-user-circle'}"></i><input type="file" id="profilePicInput" accept="image/*">`;
+      }
+    }
+
+    const myPosts = posts.filter(p => p.userId === currentUser.id);
+    document.getElementById('countPosts').textContent = myPosts.length;
+    document.getElementById('countFollowers').textContent = getFollowersCount(currentUser.id);
+    document.getElementById('countCustomers').textContent = getCustomerCount(currentUser.id);
+
+    const followingList = document.getElementById('followingList');
+    const followingCount = document.getElementById('followingCount');
+    if (followingList && followingCount) {
+      const followingUsers = allUsers.filter(u => currentUser.following && currentUser.following.includes(u.id));
+      followingCount.textContent = followingUsers.length;
+      followingList.innerHTML = followingUsers.map(u => `
+        <div class="following-item">
+          <span style="cursor:pointer;" onclick="openProfileModal('${u.id}')">
+            <i class="fas fa-user-circle"></i> ${u.name}
+          </span>
+          <button class="follow-btn following" onclick="toggleFollow('${u.id}')">Unfollow</button>
+        </div>
+      `).join('');
+    }
+
+    const picInput = document.getElementById('profilePicInput');
+    if (picInput) {
+      picInput.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+          const dataUrl = ev.target.result;
+          await db.ref('users/' + currentUser.id).update({ picData: dataUrl });
+          currentUser.picData = dataUrl;
+          addNotification('Profile picture updated!', 'profile');
+          renderProfile();
+          renderProfilePosts();
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+  }
+
+  // ============================================================
+  //  DRAWER
+  // ============================================================
+  function renderDrawer() {
+    if (!currentUser) return;
+    const myPosts = posts.filter(p => p.userId === currentUser.id);
+    const container = document.getElementById('drawerPostList');
+    if (!container) return;
+    container.innerHTML = myPosts.map(p => `
+      <div class="drawer-item">
+        <span>🔹 ${p.title} - ${p.price || 'No price'} ${p.approved ? '✅ Sold' : p.buyerId ? '⏳ Pending' : ''}</span>
+        <div class="item-actions">
+          <i class="fas fa-edit" onclick="editPost('${p.id}')"></i>
+          <i class="fas fa-trash" onclick="deletePost('${p.id}')"></i>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function deletePost(postId) {
+    if (!currentUser) return;
+    if (confirm('Delete this post?')) {
+      const p = posts.find(x => x.id === postId);
+      await db.ref('posts/' + postId).remove();
+      if (p) addNotification(`You deleted "${p.title}"`, 'delete');
+      closeDrawer();
+    }
+  }
+
+  function editPost(postId) {
+    const editSection = document.getElementById('editSection');
+    if (editSection) {
+      document.getElementById('editInput').value = 'edit description...';
+      editSection.style.display = 'flex';
+      editSection.dataset.editId = postId;
+    }
+  }
+
+  async function saveEdit() {
+    const editSection = document.getElementById('editSection');
+    const input = document.getElementById('editInput');
+    const postId = editSection?.dataset.editId;
+    if (!postId) return;
+    const newDesc = input.value.trim() || 'updated';
+    const p = posts.find(x => x.id === postId);
+    if (p) {
+      await db.ref('posts/' + postId).update({ desc: newDesc });
+      addNotification(`Updated "${p.title}" description`, 'edit');
+    }
+    if (editSection) editSection.style.display = 'none';
+    alert('Post updated');
+    closeDrawer();
+  }
+
+  // ============================================================
+  //  DRAWER TOGGLE
+  // ============================================================
+  const drawer = document.getElementById('settingsDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const openBtn = document.getElementById('settingsDrawerBtn');
+  const closeBtn = document.getElementById('closeDrawer');
+  
+  function openDrawer() { 
+    if (currentUser) {
+      if (drawer) drawer.classList.add('open');
+      if (backdrop) backdrop.classList.add('active');
+    } 
+  }
+  function closeDrawer() { 
+    if (drawer) drawer.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    const editSection = document.getElementById('editSection');
+    if (editSection) editSection.style.display = 'none';
+  }
+  
+  if (openBtn) {
+    openBtn.addEventListener('click', function(e) { e.stopPropagation(); openDrawer(); });
+  }
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  // ============================================================
+  //  TAB SWITCHING
+  // ============================================================
+  function switchTab(tabId) {
+    const headerTabs = document.querySelectorAll('.header-tab');
+    headerTabs.forEach(t => t.classList.remove('active'));
+    const targetTab = document.querySelector(`.header-tab[data-tab="${tabId}"]`);
+    if (targetTab) targetTab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const content = document.getElementById(tabId);
+    if (content) content.classList.add('active');
+    closeDrawer();
+    if (tabId === 'tabChat') {
+      closeChat();
+      renderChatUserList();
+    }
+    if (tabId === 'tabProfile') {
+      renderProfile();
+      renderProfilePosts();
+    }
+    if (tabId === 'tabHome') renderPosts();
+    const chatBadge = document.getElementById('chatBadge');
+    if (tabId === 'tabChat' && chatBadge) chatBadge.classList.add('hidden');
+    const homeBadge = document.getElementById('homeBadge');
+    if (tabId === 'tabHome' && homeBadge) homeBadge.classList.add('hidden');
+    updateBadges();
+  }
+
+  document.querySelectorAll('.header-tab').forEach(tab => {
+    tab.addEventListener('click', function() { switchTab(this.dataset.tab); });
+  });
+
+  // ============================================================
+  //  CLOSE MODALS ON BACKDROP
+  // ============================================================
+  document.getElementById('profileModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeProfileModal();
+  });
+  document.getElementById('imageViewer')?.addEventListener('click', function(e) {
+    if (e.target === this) closeImageViewer();
+  });
+  document.getElementById('ethioPaymentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeEthioPaymentModal();
+  });
+  document.getElementById('screenshotModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeScreenshotModal();
+  });
+
+  // ============================================================
+  //  INIT
+  // ============================================================
+  console.log('✅ Gooroo Marketplace App Loaded!');
+  console.log('📸 Image preview working - select an image to see preview');
+  console.log('🔐 Firebase Authentication Ready');
+  console.log('📱 Ethio Telecom Payment Integration');
+  console.log('💬 Real-time Chat Enabled');
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gooroo • Marketplace</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #f5f7fb; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .phone { max-width: 390px; width: 100%; height: 780px; background: #ffffff; border-radius: 36px; box-shadow: 0 20px 60px rgba(0,0,0,0.15); overflow: hidden; position: relative; display: flex; flex-direction: column; }
+    #registerOverlay { position: absolute; inset: 0; background: rgba(255,255,255,0.96); backdrop-filter: blur(6px); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; transition: opacity 0.3s ease; overflow-y: auto; }
+    #registerOverlay.hidden { opacity: 0; pointer-events: none; }
+    .register-card { background: white; padding: 2rem 1.8rem; border-radius: 32px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); width: 100%; max-width: 320px; text-align: center; max-height: 90vh; overflow-y: auto; }
+    .register-card h2 { font-weight: 600; font-size: 1.6rem; margin-bottom: 0.3rem; color: #0b1e33; }
+    .register-card .subtitle { color: #5e6f8d; margin-bottom: 1.2rem; font-size: 0.9rem; }
+    .register-card .field-group { margin-bottom: 0.6rem; text-align: left; }
+    .register-card .field-group label { font-size: 0.75rem; font-weight: 600; color: #2d3a4f; display: block; margin-bottom: 3px; }
+    .register-card input { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.95rem; background: #f8fafc; transition: 0.2s; }
+    .register-card input:focus { border-color: #2a7de1; outline: none; background: white; }
+    .register-card input.error { border-color: #e53e3e; background: #fff5f5; }
+    .register-card .error-msg { color: #e53e3e; font-size: 0.7rem; text-align: left; margin: 2px 0 0 8px; display: none; }
+    .register-card .error-msg.show { display: block; }
+    .register-card .password-hint { font-size: 0.65rem; color: #6c7e99; text-align: left; margin: 2px 0 0 8px; }
+    .register-card .register-btn { width: 100%; padding: 14px; background: #0b1e33; color: white; border: none; border-radius: 60px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+    .register-card .register-btn:hover { background: #1a314b; }
+    .register-card .register-footer { margin-top: 12px; font-size: 0.75rem; color: #6c7e99; }
+    .register-card .toggle-mode { font-size: 0.85rem; margin-top: 10px; }
+    .register-card .toggle-mode span { color: #2a7de1; cursor: pointer; font-weight: 600; }
+    .register-card .toggle-mode span:hover { text-decoration: underline; }
+    .register-card .login-mode { display: none; }
+    .register-card.login-mode .login-mode { display: block; }
+    .register-card.login-mode .register-mode { display: none; }
+    .app-container { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #f9fafc; }
+    .header { background: white; padding: 10px 16px 6px; border-bottom: 1px solid #edf2f7; flex-shrink: 0; z-index: 10; display: flex; flex-direction: column; gap: 6px; }
+    .header-top { display: flex; align-items: center; justify-content: space-between; }
+    .header-top h1 { font-size: 1.2rem; font-weight: 600; color: #0b1e33; }
+    .header-top h1 span { font-weight: 300; }
+    .header-actions { display: flex; gap: 14px; font-size: 1.2rem; color: #2d3a4f; position: relative; }
+    .header-actions i { cursor: pointer; position: relative; }
+    .header-actions .badge-dot { position: absolute; top: -4px; right: -6px; width: 8px; height: 8px; background: #e53e3e; border-radius: 50%; border: 2px solid white; display: none; }
+    .header-actions .badge-dot.show { display: block; }
+    .header-tabs { display: flex; gap: 2px; padding: 2px 0; }
+    .header-tab { flex: 1; text-align: center; padding: 6px 0 8px; font-size: 0.8rem; font-weight: 500; color: #8395b0; cursor: pointer; border-radius: 30px; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; position: relative; }
+    .header-tab i { font-size: 1rem; }
+    .header-tab.active { color: #0b1e33; background: #f0f4fe; }
+    .header-tab:hover { background: #f5f7fc; }
+    .badge { background: #e53e3e; color: white; font-size: 0.6rem; padding: 1px 6px; border-radius: 30px; margin-left: 2px; font-weight: 700; min-width: 18px; text-align: center; display: inline-block; }
+    .badge.hidden { display: none; }
+    .main-content { flex: 1; overflow-y: auto; padding: 16px 14px 10px; display: flex; flex-direction: column; }
+    .tab-content { display: none; flex-direction: column; gap: 16px; animation: fade 0.2s ease; }
+    .tab-content.active { display: flex; }
+    @keyframes fade { 0% { opacity: 0.6; transform: translateY(4px); } 100% { opacity: 1; transform: translateY(0); } }
+    .product-card { background: white; border-radius: 24px; padding: 14px 14px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); border: 1px solid #edf2f7; }
+    .product-img { width: 100%; height: 200px; background: #eef2f6; border-radius: 18px; display: flex; align-items: center; justify-content: center; color: #7f8fa3; font-size: 0.9rem; margin-bottom: 12px; overflow: hidden; position: relative; cursor: pointer; }
+    .product-img img { width: 100%; height: 100%; object-fit: cover; }
+    .product-img .placeholder { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #b0c0d4; }
+    .product-img .placeholder i { font-size: 2.6rem; }
+    .product-img .placeholder span { font-size: 0.7rem; }
+    .product-title { font-weight: 600; font-size: 1.05rem; color: #0b1e33; margin-bottom: 4px; }
+    .product-price { font-size: 1.2rem; font-weight: 700; color: #2a7de1; margin: 4px 0 8px; }
+    .product-price .currency { font-size: 0.8rem; font-weight: 400; color: #64748b; }
+    .product-desc { color: #3e4e66; font-size: 0.9rem; margin-bottom: 10px; line-height: 1.4; }
+    .product-meta { display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: #64748b; margin-bottom: 6px; }
+    .product-meta .seller { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .product-meta .seller .avatar { width: 24px; height: 24px; border-radius: 50%; background: #d0dbe9; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; font-size: 0.7rem; }
+    .product-meta .seller .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .buy-section { background: #f2f6fd; padding: 10px 12px; border-radius: 60px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 10px 0 8px; }
+    .buy-section span { font-weight: 500; color: #0b1e33; font-size: 0.8rem; }
+    .buy-btn { background: #0b1e33; color: white; border: none; padding: 6px 18px; border-radius: 60px; font-weight: 600; font-size: 0.8rem; margin-left: auto; cursor: pointer; transition: 0.15s; }
+    .buy-btn.bought { background: #22c55e; color: white; cursor: default; }
+    .stats-row { display: flex; gap: 18px; padding: 6px 4px 2px; font-size: 0.75rem; color: #2f486b; background: #f8faff; border-radius: 30px; margin: 4px 0 2px; }
+    .stats-row .stat-item { display: flex; align-items: center; gap: 4px; cursor: default; }
+    .stats-row .stat-item i { font-size: 0.85rem; color: #3e6b9e; width: 18px; text-align: center; }
+    .stats-row .stat-item .count { font-weight: 600; min-width: 18px; }
+    .stats-row .stat-item.like-btn { cursor: pointer; padding: 2px 8px 2px 4px; border-radius: 40px; transition: 0.1s; }
+    .stats-row .stat-item.like-btn:hover { background: #e8effa; }
+    .stats-row .stat-item.like-btn.liked i { color: #e53e3e; }
+    .post-btn { background: #0b1e33; color: white; padding: 12px 18px; border-radius: 60px; text-align: center; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: 0.2s; border: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; box-shadow: 0 4px 12px rgba(11, 30, 51, 0.15); }
+    .post-btn:hover { background: #1a314b; transform: scale(1.01); }
+    .post-btn i { font-size: 1.1rem; }
+    .loading { text-align: center; padding: 20px; color: #8296b0; }
+    .profile-header { display: flex; align-items: center; gap: 18px; background: white; padding: 16px 14px; border-radius: 28px; border: 1px solid #edf2f7; margin-bottom: 12px; }
+    .profile-pic { width: 72px; height: 72px; border-radius: 60px; background: #d0dbe9; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; color: #2d4b6e; overflow: hidden; cursor: pointer; position: relative; flex-shrink: 0; }
+    .profile-pic img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-pic i { background: rgba(255,255,255,0.6); padding: 8px; border-radius: 60px; }
+    .profile-pic input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .profile-name { font-weight: 600; font-size: 1.2rem; }
+    .profile-stats { color: #4e6a8a; font-size: 0.8rem; }
+    .profile-counts { display: flex; gap: 20px; justify-content: center; padding: 12px 0; background: white; border-radius: 20px; border: 1px solid #edf2f7; margin-bottom: 12px; }
+    .profile-counts .count-item { text-align: center; }
+    .profile-counts .count-item .num { font-weight: 700; font-size: 1.1rem; color: #0b1e33; }
+    .profile-counts .count-item .label { font-size: 0.7rem; color: #64748b; }
+    .profile-posts-container { display: flex; flex-direction: column; gap: 16px; }
+    .image-viewer { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.92); z-index: 900; justify-content: center; align-items: center; padding: 20px; }
+    .image-viewer.open { display: flex; }
+    .image-viewer .close-viewer { position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; z-index: 901; }
+    .image-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+    .settings-drawer { position: absolute; top: 0; right: -280px; width: 280px; height: 100%; background: white; box-shadow: -8px 0 30px rgba(0,0,0,0.08); transition: right 0.25s ease; z-index: 500; padding: 24px 18px; display: flex; flex-direction: column; gap: 12px; border-left: 1px solid #edf2f7; }
+    .settings-drawer.open { right: 0; }
+    .settings-drawer .close-drawer { align-self: flex-end; font-size: 1.4rem; cursor: pointer; color: #2d3a4f; }
+    .settings-drawer .drawer-section { border-top: 1px solid #edf2f7; padding-top: 12px; margin-top: 4px; }
+    .drawer-item { background: #f8fafc; padding: 12px 14px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eef2f6; }
+    .drawer-item .item-actions i { margin-left: 10px; color: #3e5a7a; cursor: pointer; }
+    .drawer-item .item-actions i:hover { color: #0b1e33; }
+    .logout-btn { width: 100%; padding: 12px; background: #e53e3e; color: white; border: none; border-radius: 60px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .logout-btn:hover { background: #c0392b; }
+    .drawer-backdrop { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.1); z-index: 499; }
+    .drawer-backdrop.active { display: block; }
+    .profile-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 800; justify-content: center; align-items: center; padding: 20px; }
+    .profile-modal.open { display: flex; }
+    .profile-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .profile-modal .modal-box .close-modal { float: right; font-size: 1.4rem; cursor: pointer; color: #2d3a4f; }
+    .profile-modal .modal-box .profile-avatar { width: 80px; height: 80px; border-radius: 50%; background: #d0dbe9; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto 12px; font-size: 2.5rem; color: #2d4b6e; }
+    .profile-modal .modal-box .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-modal .modal-box .profile-name-modal { text-align: center; font-size: 1.3rem; font-weight: 600; color: #0b1e33; }
+    .profile-modal .modal-box .profile-badge { text-align: center; font-size: 0.8rem; color: #64748b; margin-bottom: 12px; }
+    .profile-modal .modal-box .profile-counts-modal { display: flex; gap: 20px; justify-content: center; padding: 12px 0; border-top: 1px solid #edf2f7; border-bottom: 1px solid #edf2f7; margin-bottom: 12px; }
+    .profile-modal .modal-box .profile-counts-modal .count-item { text-align: center; }
+    .profile-modal .modal-box .profile-counts-modal .count-item .num { font-weight: 700; font-size: 1.1rem; color: #0b1e33; }
+    .profile-modal .modal-box .profile-counts-modal .count-item .label { font-size: 0.7rem; color: #64748b; }
+    .profile-modal .modal-box .profile-posts-modal { display: flex; flex-direction: column; gap: 8px; }
+    .profile-modal .modal-box .profile-posts-modal .post-item-modal { padding: 8px 12px; background: #f8fafc; border-radius: 16px; border: 1px solid #edf2f7; font-size: 0.85rem; }
+    .profile-modal .modal-box .follow-btn-modal { width: 100%; padding: 10px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; margin-top: 12px; }
+    .profile-modal .modal-box .follow-btn-modal.following { background: #0b1e33; color: white; }
+    .profile-modal .modal-box .follow-btn-modal:not(.following) { background: #eef2f6; color: #0b1e33; }
+    .search-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: flex-start; padding-top: 60px; }
+    .search-modal.open { display: flex; }
+    .search-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 90%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .search-modal .modal-box input { width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.95rem; margin-bottom: 12px; background: #f8fafc; transition: 0.2s; }
+    .search-modal .modal-box .search-results { max-height: 200px; overflow-y: auto; }
+    .search-modal .modal-box .search-results .result-item { padding: 8px 12px; border-bottom: 1px solid #edf2f7; cursor: pointer; }
+    .notif-panel { display: none; position: absolute; top: 60px; right: 10px; width: 280px; background: white; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 999; padding: 16px; max-height: 300px; overflow-y: auto; border: 1px solid #edf2f7; }
+    .notif-panel.open { display: block; }
+    .notif-panel .notif-item { padding: 8px 0; border-bottom: 1px solid #f5f7fc; font-size: 0.85rem; }
+    .notif-panel .notif-item .time { font-size: 0.65rem; color: #8296b0; }
+    .bottom-nav { display: none; }
+    .post-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; padding: 30px; }
+    .post-modal.open { display: flex; }
+    .post-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .post-modal .modal-box h3 { margin-bottom: 12px; font-weight: 600; color: #0b1e33; }
+    .post-modal .modal-box .image-preview { width: 100%; height: 150px; background: #eef2f6; border-radius: 18px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; border: 2px dashed #dce3ec; }
+    .post-modal .modal-box .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .post-modal .modal-box .image-preview .placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #b0c0d4; }
+    .post-modal .modal-box input, .post-modal .modal-box textarea { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.9rem; margin-bottom: 10px; background: #f8fafc; transition: 0.2s; }
+    .post-modal .modal-box textarea { border-radius: 20px; min-height: 60px; resize: vertical; }
+    .post-modal .modal-box .file-input-wrap { margin-bottom: 10px; }
+    .post-modal .modal-box .file-input-wrap input[type="file"] { width: 100%; padding: 10px; border-radius: 20px; border: 1px solid #e2e8f0; }
+    .post-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+    .post-modal .modal-actions button { padding: 10px 20px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .post-modal .modal-actions .cancel-btn { background: #edf2f7; color: #2d3a4f; }
+    .post-modal .modal-actions .confirm-btn { background: #0b1e33; color: white; }
+    .chat-user-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid #edf2f7; padding-bottom: 12px; }
+    .chat-user-item { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 30px; cursor: pointer; transition: 0.15s; background: white; border: 1px solid #edf2f7; }
+    .chat-user-item .avatar { width: 40px; height: 40px; border-radius: 50%; background: #d0dbe9; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; font-size: 1.2rem; color: #2d4b6e; cursor: pointer; }
+    .chat-user-item .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-user-item .user-info { flex: 1; cursor: pointer; }
+    .chat-user-item .user-info .name { font-weight: 600; font-size: 0.9rem; color: #0b1e33; }
+    .chat-user-item .user-info .last-msg { font-size: 0.75rem; color: #8296b0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .chat-user-item .unread-badge { background: #e53e3e; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 30px; font-weight: 700; }
+    .chat-messages-container { flex: 1; display: flex; flex-direction: column; }
+    .chat-messages-container .chat-header { display: flex; align-items: center; gap: 12px; padding: 8px 0 12px; border-bottom: 1px solid #edf2f7; margin-bottom: 8px; }
+    .chat-messages-container .chat-header .back-btn { cursor: pointer; font-size: 1.2rem; color: #2d3a4f; }
+    .chat-messages-container .chat-header .chat-with { font-weight: 600; font-size: 1rem; color: #0b1e33; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .chat-messages-container .chat-header .chat-with .avatar { width: 32px; height: 32px; border-radius: 50%; background: #d0dbe9; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; font-size: 0.9rem; color: #2d4b6e; }
+    .chat-messages-container .chat-header .chat-with .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .chat-container { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; flex: 1; overflow-y: auto; max-height: 320px; }
+    .chat-message { display: flex; flex-direction: column; max-width: 85%; padding: 10px 14px; border-radius: 18px; position: relative; word-wrap: break-word; }
+    .chat-message.sent { align-self: flex-end; background: #0b1e33; color: white; border-bottom-right-radius: 4px; }
+    .chat-message.received { align-self: flex-start; background: white; color: #1f334b; border: 1px solid #edf2f7; border-bottom-left-radius: 4px; }
+    .chat-message .sender { font-size: 0.7rem; font-weight: 600; margin-bottom: 2px; }
+    .chat-message.sent .sender { color: #a0c4ff; }
+    .chat-message.received .sender { color: #0b1e33; }
+    .chat-message .msg { font-size: 0.9rem; line-height: 1.4; }
+    .chat-message .time { font-size: 0.6rem; opacity: 0.7; margin-top: 4px; align-self: flex-end; }
+    .chat-input-wrap { display: flex; gap: 8px; margin-top: 8px; background: white; padding: 6px 10px; border-radius: 60px; border: 1px solid #e2e8f0; }
+    .chat-input-wrap input { flex: 1; border: none; padding: 8px 0; font-size: 0.9rem; outline: none; background: transparent; }
+    .chat-input-wrap button { background: #0b1e33; color: white; border: none; border-radius: 60px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
+    .approve-btn { background: #eab308; color: #0b1e33; border: none; padding: 4px 14px; border-radius: 60px; font-weight: 600; font-size: 0.7rem; cursor: pointer; transition: 0.15s; margin-left: auto; }
+    .approve-btn:hover { background: #ca8a04; }
+    .approve-btn.approved { background: #22c55e; color: white; cursor: default; }
+    .approve-status { font-size: 0.7rem; color: #22c55e; font-weight: 600; margin-left: 8px; display: none; }
+    .approve-status.show { display: inline; }
+    .payment-methods { display: none; background: #f8faff; border-radius: 20px; padding: 12px 14px; margin-top: 6px; border: 1px solid #e2ecf9; flex-direction: column; gap: 8px; }
+    .payment-methods.open { display: flex; }
+    .payment-methods .method { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #1f334b; padding: 6px 8px; background: white; border-radius: 40px; border: 1px solid #edf2f7; cursor: pointer; transition: 0.15s; }
+    .payment-methods .method:hover { background: #f0f4fe; }
+    .payment-methods .method i { width: 22px; color: #2a7de1; font-size: 0.9rem; }
+    .payment-methods .method .label { font-weight: 500; color: #0b1e33; }
+    .payment-methods .method .sub-label { font-size: 0.65rem; color: #6c7e99; }
+    .ethio-payment-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 30px; }
+    .ethio-payment-modal.open { display: flex; }
+    .ethio-payment-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto; }
+    .ethio-payment-modal .modal-box h3 { margin-bottom: 8px; font-weight: 600; color: #0b1e33; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ethio-payment-modal .modal-box .method-badge { display: inline-block; padding: 2px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; }
+    .ethio-payment-modal .modal-box .method-badge.telebirr { background: #1a73e8; color: white; }
+    .ethio-payment-modal .modal-box .method-badge.ebirr { background: #eab308; color: #0b1e33; }
+    .ethio-payment-modal .modal-box .method-badge.bank { background: #2d3a4f; color: white; }
+    .ethio-payment-modal .modal-box p { font-size: 0.85rem; color: #3e4e66; margin-bottom: 12px; }
+    .ethio-payment-modal .modal-box .instruction-box { background: #f0f4fe; border-radius: 16px; padding: 12px; margin-bottom: 12px; border-left: 3px solid #2a7de1; }
+    .ethio-payment-modal .modal-box .instruction-box .step { font-size: 0.8rem; color: #1f334b; padding: 4px 0; display: flex; align-items: flex-start; gap: 8px; }
+    .ethio-payment-modal .modal-box .instruction-box .step .num { background: #2a7de1; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+    .ethio-payment-modal .modal-box .field-group { margin-bottom: 10px; }
+    .ethio-payment-modal .modal-box .field-group label { font-size: 0.7rem; font-weight: 600; color: #2d3a4f; display: block; margin-bottom: 3px; }
+    .ethio-payment-modal .modal-box .field-group input { width: 100%; padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 60px; font-size: 0.9rem; background: #f8fafc; transition: 0.2s; }
+    .ethio-payment-modal .modal-box .field-group input:focus { border-color: #2a7de1; outline: none; background: white; }
+    .ethio-payment-modal .modal-box .field-group .hint { font-size: 0.65rem; color: #6c7e99; margin-top: 2px; }
+    .ethio-payment-modal .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 12px; }
+    .ethio-payment-modal .modal-actions button { padding: 10px 20px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .ethio-payment-modal .modal-actions .cancel-btn { background: #edf2f7; color: #2d3a4f; }
+    .ethio-payment-modal .modal-actions .confirm-btn { background: #0b1e33; color: white; }
+    .screenshot-modal { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; padding: 30px; }
+    .screenshot-modal.open { display: flex; }
+    .screenshot-modal .modal-box { background: white; border-radius: 32px; padding: 24px; width: 100%; max-width: 340px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .screenshot-modal .modal-box h3 { margin-bottom: 12px; font-weight: 600; color: #0b1e33; }
+    .screenshot-modal .modal-box p { font-size: 0.9rem; color: #3e4e66; margin-bottom: 16px; }
+    .screenshot-modal .modal-box input[type="file"] { width: 100%; padding: 10px; border: 2px dashed #dce3ec; border-radius: 20px; background: #f8fafc; margin-bottom: 16px; cursor: pointer; }
+    .screenshot-modal .modal-box .upload-info { font-size: 0.75rem; color: #6c7e99; margin-top: -8px; margin-bottom: 12px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .modal-actions button { padding: 10px 20px; border: none; border-radius: 60px; font-weight: 600; cursor: pointer; transition: 0.15s; }
+    .modal-actions .cancel-btn { background: #edf2f7; color: #2d3a4f; }
+    .modal-actions .confirm-btn { background: #0b1e33; color: white; }
+    .following-list { margin-top: 8px; }
+    .following-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #edf2f7; font-size: 0.85rem; }
+    .follow-btn { background: #eef2f6; border: none; padding: 4px 12px; border-radius: 30px; font-size: 0.7rem; font-weight: 600; color: #0b1e33; cursor: pointer; transition: 0.15s; }
+    .follow-btn.following { background: #0b1e33; color: white; }
+    .follow-btn:hover { opacity: 0.8; }
+  </style>
+</head>
+<body>
+<div class="phone" id="app">
+  <!-- Registration / Login Overlay -->
+  <div id="registerOverlay">
+    <div class="register-card" id="registerCard">
+      <div class="register-mode">
+        <h2>👋 Create Account</h2>
+        <p class="subtitle">Join Gooroo Marketplace</p>
+        <div class="field-group">
+          <label>Full Name</label>
+          <input type="text" id="regName" placeholder="Your full name">
+        </div>
+        <div class="field-group">
+          <label>Email Address</label>
+          <input type="email" id="regEmail" placeholder="name@example.com">
+          <div class="error-msg" id="emailError">Please enter a valid email address</div>
+        </div>
+        <div class="field-group">
+          <label>Password</label>
+          <input type="password" id="regPassword" placeholder="Min 6 characters">
+          <div class="error-msg" id="passwordError">Password must be at least 6 characters</div>
+          <div class="password-hint">Use at least 6 characters</div>
+        </div>
+        <div class="field-group">
+          <label>Confirm Password</label>
+          <input type="password" id="regConfirmPassword" placeholder="Confirm your password">
+          <div class="error-msg" id="confirmError">Passwords do not match</div>
+        </div>
+        <button class="register-btn" id="registerBtn">Create Account →</button>
+        <div class="register-footer" id="regInfo">First user becomes Admin</div>
+        <div class="toggle-mode">Already have an account? <span onclick="toggleAuthMode()">Login</span></div>
+      </div>
+      
+      <div class="login-mode">
+        <h2>👋 Welcome Back</h2>
+        <p class="subtitle">Login to your account</p>
+        <div class="field-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="name@example.com">
+          <div class="error-msg" id="loginEmailError">Please enter your email</div>
+        </div>
+        <div class="field-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" placeholder="Enter your password">
+          <div class="error-msg" id="loginPasswordError">Please enter your password</div>
+        </div>
+        <button class="register-btn" id="loginBtn">Login →</button>
+        <div class="register-footer">Welcome back to Gooroo</div>
+        <div class="toggle-mode">Don't have an account? <span onclick="toggleAuthMode()">Register</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- All Modals -->
+  <div class="image-viewer" id="imageViewer" onclick="closeImageViewer()">
+    <span class="close-viewer" onclick="closeImageViewer()"><i class="fas fa-times"></i></span>
+    <img id="viewerImage" src="" alt="Full size">
+  </div>
+
+  <div class="profile-modal" id="profileModal">
+    <div class="modal-box">
+      <span class="close-modal" onclick="closeProfileModal()"><i class="fas fa-times"></i></span>
+      <div class="profile-avatar" id="modalAvatar"><i class="fas fa-user-circle"></i></div>
+      <div class="profile-name-modal" id="modalName">User</div>
+      <div class="profile-badge" id="modalBadge"></div>
+      <div class="profile-counts-modal">
+        <div class="count-item"><div class="num" id="modalPosts">0</div><div class="label">Posts</div></div>
+        <div class="count-item"><div class="num" id="modalFollowers">0</div><div class="label">Followers</div></div>
+        <div class="count-item"><div class="num" id="modalCustomers">0</div><div class="label">Customers</div></div>
+      </div>
+      <div style="font-weight:500; margin-bottom:8px;">📦 Posts</div>
+      <div class="profile-posts-modal" id="modalPostsList"></div>
+      <button class="follow-btn-modal" id="modalFollowBtn" onclick="modalFollowAction()">Follow</button>
+    </div>
+  </div>
+
+  <!-- POST MODAL WITH PREVIEW FEATURE -->
+  <div class="post-modal" id="postModal">
+    <div class="modal-box">
+      <h3>📸 Post Your Product</h3>
+      <div class="image-preview" id="postImagePreview">
+        <div class="placeholder">
+          <i class="fas fa-image"></i>
+          <span>Select an image</span>
+        </div>
+      </div>
+      <div class="file-input-wrap">
+        <input type="file" id="postImageInput" accept="image/*" capture="environment">
+      </div>
+      <input type="text" id="postTitle" placeholder="Product title *">
+      <input type="text" id="postPrice" placeholder="Price (e.g. 2500 ETB) *">
+      <textarea id="postDesc" placeholder="Product description *"></textarea>
+      <input type="text" id="postBank" placeholder="Bank account (name & number) *" value="1000 1234567890 (A. Tadesse)">
+      <div class="hint" style="font-size:0.7rem; color:#6c7e99; margin:-6px 0 10px 8px;">Ethiopian bank accounts: 10 digits</div>
+      <input type="text" id="postEbirr" placeholder="eBirr number *" value="0911 223344">
+      <input type="text" id="postTelebirr" placeholder="Telebirr number *" value="0922 334455">
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closePostModal()">Cancel</button>
+        <button class="confirm-btn" onclick="confirmPost()">Post Product</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-modal" id="searchModal">
+    <div class="modal-box">
+      <h3>🔍 Search Products</h3>
+      <input type="text" id="searchInput" placeholder="Search by title or seller..." oninput="performSearch(this.value)">
+      <div class="search-results" id="searchResults"></div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeSearch()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="notif-panel" id="notifPanel">
+    <h4 style="margin-bottom: 8px;">🔔 Notifications</h4>
+    <div id="notifList">
+      <div class="notif-item" style="color: #8296b0; text-align: center;">No new notifications</div>
+    </div>
+  </div>
+
+  <div class="ethio-payment-modal" id="ethioPaymentModal">
+    <div class="modal-box">
+      <h3>
+        <span id="ethioPaymentIcon"><i class="fas fa-mobile-alt"></i></span>
+        <span id="ethioPaymentTitle">Telebirr Payment</span>
+        <span class="method-badge" id="ethioPaymentBadge">Telebirr</span>
+      </h3>
+      <p id="ethioPaymentDesc">Complete your payment using Ethio Telecom's mobile money service.</p>
+      <div class="instruction-box" id="ethioInstructions">
+        <div class="step"><span class="num">1</span> Dial <strong>*127#</strong> on your Ethio Telecom SIM</div>
+        <div class="step"><span class="num">2</span> Select "Send Money"</div>
+        <div class="step"><span class="num">3</span> Enter the seller's number: <strong id="sellerPhoneDisplay">09XX XXX XXX</strong></div>
+        <div class="step"><span class="num">4</span> Enter amount: <strong id="amountDisplay">0 ETB</strong></div>
+        <div class="step"><span class="num">5</span> Enter your PIN to confirm</div>
+        <div class="step"><span class="num">6</span> Copy the transaction ID from the confirmation SMS</div>
+      </div>
+      <div class="field-group">
+        <label>Transaction ID (from confirmation SMS)</label>
+        <input type="text" id="transactionIdInput" placeholder="e.g. TBT-2026-123456">
+        <div class="hint">Enter the transaction ID you received via SMS from Ethio Telecom</div>
+      </div>
+      <div class="field-group">
+        <label>Your Phone Number (registered with Telebirr/eBirr)</label>
+        <input type="text" id="senderPhoneInput" placeholder="09XX XXX XXX">
+        <div class="hint">The phone number you used to send the money</div>
+      </div>
+      <div class="field-group">
+        <label>Sender Name (as registered)</label>
+        <input type="text" id="senderNameInput" placeholder="Your full name">
+      </div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeEthioPaymentModal()">Cancel</button>
+        <button class="confirm-btn" id="ethioConfirmBtn" onclick="confirmEthioPayment()">Submit Payment</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screenshot-modal" id="screenshotModal">
+    <div class="modal-box">
+      <h3>📸 Upload Screenshot</h3>
+      <p>Please upload a screenshot of your payment confirmation from Ethio Telecom.</p>
+      <input type="file" id="screenshotInput" accept="image/*">
+      <div class="upload-info">This helps the seller verify your payment quickly</div>
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeScreenshotModal()">Skip</button>
+        <button class="confirm-btn" onclick="confirmScreenshot()">Upload & Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <div class="settings-drawer" id="settingsDrawer">
+    <div class="close-drawer" id="closeDrawer"><i class="fas fa-times"></i></div>
+    <h4>⚙️ Manage Posts</h4>
+    <div id="drawerPostList"></div>
+    <div class="edit-info" id="editSection" style="display: none;">
+      <input type="text" id="editInput" placeholder="new description">
+      <button onclick="saveEdit()">Save</button>
+    </div>
+    <div class="drawer-section">
+      <button class="logout-btn" onclick="logoutUser()">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+    <div style="margin-top: auto; font-size:0.7rem; color:#7f8fa3;">• only you can delete/edit</div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container">
+    <div class="header">
+      <div class="header-top">
+        <h1>Gooroo<span style="font-weight:300;">Market</span></h1>
+        <div class="header-actions">
+          <i class="fas fa-search" onclick="openSearch()"></i>
+          <i class="fas fa-bell" onclick="toggleNotifications()">
+            <span class="badge-dot" id="notifDot"></span>
+          </i>
+          <i class="fas fa-cog" id="settingsDrawerBtn" style="cursor:pointer;"></i>
+        </div>
+      </div>
+      <div class="header-tabs">
+        <div class="header-tab active" data-tab="tabHome" id="homeTab">
+          <i class="fas fa-home"></i> Home
+          <span class="badge hidden" id="homeBadge">0</span>
+        </div>
+        <div class="header-tab" data-tab="tabChat" id="chatTab">
+          <i class="fas fa-comment-dots"></i> Chat
+          <span class="badge hidden" id="chatBadge">0</span>
+        </div>
+        <div class="header-tab" data-tab="tabProfile"><i class="fas fa-user-circle"></i> Profile</div>
+      </div>
+    </div>
+
+    <div class="main-content" id="mainContent">
+      <!-- HOME TAB -->
+      <div class="tab-content active" id="tabHome">
+        <button class="post-btn" onclick="openPostModal()">
+          <i class="fas fa-plus-circle"></i> Post Image
+        </button>
+        <div id="productFeed"><div class="loading">Loading products...</div></div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div class="tab-content" id="tabChat">
+        <div class="chat-user-list" id="chatUserList"><div class="loading">Loading users...</div></div>
+        <div class="chat-messages-container" id="chatMessagesContainer" style="display:none;">
+          <div class="chat-header">
+            <span class="back-btn" onclick="closeChat()"><i class="fas fa-arrow-left"></i></span>
+            <span class="chat-with" id="chatWithUser" onclick="openProfileFromChat()">
+              <span class="avatar" id="chatAvatar"><i class="fas fa-user-circle"></i></span>
+              <span id="chatUserName">User</span>
+            </span>
+          </div>
+          <div class="chat-container" id="chatMessages"></div>
+          <div class="chat-input-wrap">
+            <input type="text" id="chatInput" placeholder="Type a message...">
+            <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+          </div>
+        </div>
+        <div id="chatEmptyState" style="text-align:center; padding:40px 0; color:#8296b0;">
+          <i class="fas fa-comments" style="font-size:2.5rem; margin-bottom:12px; display:block;"></i>
+          <p>Select a user to start chatting</p>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div class="tab-content" id="tabProfile">
+        <div class="profile-header">
+          <div class="profile-pic" id="profilePic">
+            <i class="fas fa-user-circle"></i>
+            <input type="file" id="profilePicInput" accept="image/*">
+          </div>
+          <div>
+            <div class="profile-name" id="profileName">User</div>
+            <div class="profile-stats"><i class="fas fa-clock"></i> joined <span id="profileJoinDate">today</span></div>
+          </div>
+        </div>
+        <div class="profile-counts" id="profileCounts">
+          <div class="count-item"><div class="num" id="countPosts">0</div><div class="label">Posts</div></div>
+          <div class="count-item"><div class="num" id="countFollowers">0</div><div class="label">Followers</div></div>
+          <div class="count-item"><div class="num" id="countCustomers">0</div><div class="label">Customers</div></div>
+        </div>
+        <div style="font-weight:500; margin: 4px 0 6px;">📦 my posts</div>
+        <div class="profile-posts-container" id="profilePosts"></div>
+        <div style="margin-top:12px; font-size:0.7rem; color:#4f6f92;">click profile pic to change</div>
+        <div style="margin-top:12px; font-weight:500;">👥 Following (<span id="followingCount">0</span>)</div>
+        <div id="followingList" class="following-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  //  🔥 FIREBASE CONFIGURATION
+  // ============================================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDQjC32qPzEfpFHY4SpjSB1BwGFQhkPlCY",
+    authDomain: "gooroomarket-46def.firebaseapp.com",
+    databaseURL: "https://gooroomarket-46def-default-rtdb.firebaseio.com",
+    projectId: "gooroomarket-46def",
+    storageBucket: "gooroomarket-46def.firebasestorage.app",
+    messagingSenderId: "962161789078",
+    appId: "1:962161789078:web:aaeb5a48d9fa6cedcf5ab7"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  // ============================================================
+  //  STATE
+  // ============================================================
+  let currentUser = null;
+  let posts = [];
+  let messages = [];
+  let allUsers = [];
+  let notifications = [];
+  let selectedChatUserId = null;
+  let postImageData = null;
+  let modalTargetUserId = null;
+  let pendingPostId = null;
+  let selectedMethod = null;
+  let notifOpen = false;
+  let isLoginMode = false;
+
+  // ============================================================
+  //  AUTHENTICATION
+  // ============================================================
+  document.getElementById('registerBtn').addEventListener('click', async function() {
+    const name = document.getElementById('regName').value.trim() || 'User';
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirmPassword').value;
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      alert('Passwords do not match.');
+      return;
+    }
+    
+    try {
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const firebaseUser = userCredential.user;
+      const usersSnapshot = await db.ref('users').once('value');
+      const isAdmin = !usersSnapshot.exists();
+      
+      const userData = {
+        id: firebaseUser.uid,
+        name: name,
+        email: email,
+        isAdmin: isAdmin,
+        joined: new Date().toISOString(),
+        pic: 'fas fa-user-circle',
+        picData: null,
+        followers: [],
+        following: [],
+        phone: ''
+      };
+      
+      await db.ref('users/' + firebaseUser.uid).set(userData);
+      currentUser = { ...userData, firebaseUser };
+      document.getElementById('registerOverlay').classList.add('hidden');
+      addNotification('✅ Account created! Welcome to Gooroo.', 'system');
+      renderAll();
+      updateBadges();
+      alert(`✅ Welcome ${name}!${isAdmin ? ' You are the Admin.' : ''}`);
+    } catch (error) {
+      alert('❌ Registration failed: ' + error.message);
+    }
+  });
+
+  document.getElementById('loginBtn').addEventListener('click', async function() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value.trim();
+    
+    if (!email || !password) {
+      alert('Please enter both email and password.');
+      return;
+    }
+    
+    try {
+      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const firebaseUser = userCredential.user;
+      const userSnapshot = await db.ref('users/' + firebaseUser.uid).once('value');
+      
+      if (!userSnapshot.exists()) {
+        alert('User data not found.');
+        return;
+      }
+      
+      currentUser = { ...userSnapshot.val(), firebaseUser };
+      document.getElementById('registerOverlay').classList.add('hidden');
+      renderAll();
+      updateBadges();
+      addNotification(`👋 Welcome back, ${currentUser.name}!`, 'system');
+      alert(`✅ Welcome back ${currentUser.name}!`);
+    } catch (error) {
+      alert('❌ Login failed: ' + error.message);
+    }
+  });
+
+  auth.onAuthStateChanged(async (firebaseUser) => {
+    if (firebaseUser && !currentUser) {
+      try {
+        const userSnapshot = await db.ref('users/' + firebaseUser.uid).once('value');
+        if (userSnapshot.exists()) {
+          currentUser = { ...userSnapshot.val(), firebaseUser };
+          document.getElementById('registerOverlay').classList.add('hidden');
+          renderAll();
+          updateBadges();
+        }
+      } catch (error) {
+        console.error('Auth state error:', error);
+      }
+    } else if (!firebaseUser && currentUser) {
+      currentUser = null;
+      document.getElementById('registerOverlay').classList.remove('hidden');
+      renderAll();
+    }
+  });
+
+  function toggleAuthMode() {
+    isLoginMode = !isLoginMode;
+    document.getElementById('registerCard').classList.toggle('login-mode', isLoginMode);
+  }
+
+  // ============================================================
+  //  REALTIME DATABASE LISTENERS
+  // ============================================================
+  
+  db.ref('posts').orderByChild('createdAt').on('value', (snapshot) => {
+    posts = [];
+    snapshot.forEach((child) => {
+      posts.push({ id: child.key, ...child.val() });
+    });
+    posts.sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      return 0;
+    });
+    renderPosts();
+    renderProfilePosts();
+    renderDrawer();
+    updateBadges();
+  });
+
+  db.ref('messages').orderByChild('timestamp').on('value', (snapshot) => {
+    messages = [];
+    snapshot.forEach((child) => {
+      messages.push({ id: child.key, ...child.val() });
+    });
+    renderChatUserList();
+    if (selectedChatUserId) renderChatMessages();
+    updateBadges();
+  });
+
+  db.ref('users').on('value', (snapshot) => {
+    allUsers = [];
+    snapshot.forEach((child) => {
+      allUsers.push({ id: child.key, ...child.val() });
+    });
+    renderChatUserList();
+    renderProfile();
+    renderProfilePosts();
+    renderDrawer();
+    updateBadges();
+  });
+
+  db.ref('notifications').orderByChild('timestamp').on('value', (snapshot) => {
+    notifications = [];
+    snapshot.forEach((child) => {
+      notifications.push({ id: child.key, ...child.val() });
+    });
+    renderNotifications();
+    updateNotifBadge();
+  });
+
+  // ============================================================
+  //  NOTIFICATIONS
+  // ============================================================
+  function addNotification(message, type = 'info') {
+    if (!currentUser) return;
+    const newNotifRef = db.ref('notifications').push();
+    newNotifRef.set({
+      userId: currentUser.id,
+      message: message,
+      type: type,
+      read: false,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  function updateNotifBadge() {
+    const unread = notifications.filter(n => !n.read).length;
+    const dot = document.getElementById('notifDot');
+    if (dot) {
+      if (unread > 0) dot.classList.add('show');
+      else dot.classList.remove('show');
+    }
+  }
+
+  function renderNotifications() {
+    const container = document.getElementById('notifList');
+    if (!container) return;
+    if (notifications.length === 0) {
+      container.innerHTML = '<div class="notif-item" style="color: #8296b0; text-align: center;">No notifications</div>';
+      return;
+    }
+    container.innerHTML = notifications.map(n => `
+      <div class="notif-item" style="${n.read ? 'opacity:0.6;' : ''}">
+        ${n.message}
+        <div class="time">${new Date(n.timestamp).toLocaleString()}</div>
+      </div>
+    `).join('');
+  }
+
+  function toggleNotifications() {
+    notifOpen = !notifOpen;
+    const panel = document.getElementById('notifPanel');
+    if (panel) panel.classList.toggle('open', notifOpen);
+    if (notifOpen) {
+      notifications.forEach(async n => {
+        if (!n.read) {
+          await db.ref('notifications/' + n.id).update({ read: true });
+        }
+      });
+    }
+  }
+
+  // ============================================================
+  //  IMAGE VIEWER
+  // ============================================================
+  function openImageViewer(imageSrc) {
+    if (!imageSrc) return;
+    document.getElementById('viewerImage').src = imageSrc;
+    document.getElementById('imageViewer').classList.add('open');
+  }
+  function closeImageViewer() {
+    document.getElementById('imageViewer').classList.remove('open');
+  }
+
+  // ============================================================
+  //  PROFILE MODAL
+  // ============================================================
+  function openProfileModal(userId) {
+    if (!userId) return;
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    modalTargetUserId = userId;
+    
+    const avatar = document.getElementById('modalAvatar');
+    if (avatar) {
+      if (user.picData) {
+        avatar.innerHTML = `<img src="${user.picData}" alt="${user.name}">`;
+      } else {
+        avatar.innerHTML = `<i class="fas fa-user-circle"></i>`;
+      }
+    }
+    
+    document.getElementById('modalName').textContent = user.name + (user.isAdmin ? ' 👑' : '');
+    document.getElementById('modalBadge').textContent = `Joined ${new Date(user.joined).toLocaleDateString()}`;
+    
+    const userPosts = posts.filter(p => p.userId === userId);
+    document.getElementById('modalPosts').textContent = userPosts.length;
+    document.getElementById('modalFollowers').textContent = user.followers ? user.followers.length : 0;
+    document.getElementById('modalCustomers').textContent = getCustomerCount(userId);
+    
+    const list = document.getElementById('modalPostsList');
+    if (list) {
+      list.innerHTML = userPosts.map(p => `
+        <div class="post-item-modal">
+          <strong>${p.title}</strong>
+          ${p.price ? `<span class="price">${p.price} ETB</span>` : ''}
+          <div style="font-size:0.7rem; color:#8296b0;">${new Date(p.createdAt).toLocaleString()}</div>
+          ${p.buyers > 0 ? `<div style="font-size:0.7rem; color:#22c55e;">✅ ${p.buyers} sold</div>` : ''}
+        </div>
+      `).join('');
+    }
+    
+    const followBtn = document.getElementById('modalFollowBtn');
+    if (followBtn) {
+      const isFollowing = isFollowingUser(userId);
+      followBtn.textContent = isFollowing ? 'Unfollow' : 'Follow';
+      followBtn.className = 'follow-btn-modal' + (isFollowing ? ' following' : '');
+    }
+    
+    document.getElementById('profileModal').classList.add('open');
+  }
+
+  function closeProfileModal() {
+    document.getElementById('profileModal').classList.remove('open');
+    modalTargetUserId = null;
+  }
+
+  function modalFollowAction() {
+    if (!modalTargetUserId) return;
+    toggleFollow(modalTargetUserId);
+    openProfileModal(modalTargetUserId);
+  }
+
+  function openProfileFromChat() {
+    if (selectedChatUserId) {
+      openProfileModal(selectedChatUserId);
+    }
+  }
+
+  // ============================================================
+  //  SEARCH
+  // ============================================================
+  function openSearch() {
+    document.getElementById('searchModal').classList.add('open');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchInput').focus();
+    document.getElementById('searchResults').innerHTML = '';
+  }
+  
+  function closeSearch() {
+    document.getElementById('searchModal').classList.remove('open');
+  }
+  
+  function performSearch(query) {
+    const results = document.getElementById('searchResults');
+    if (!results) return;
+    if (!query || query.length < 2) {
+      results.innerHTML = '';
+      return;
+    }
+    const q = query.toLowerCase();
+    const filtered = posts.filter(p => 
+      p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) ||
+      (p.userName && p.userName.toLowerCase().includes(q))
+    );
+    if (filtered.length === 0) {
+      results.innerHTML = '<div style="padding:8px;color:#8296b0;">No results found</div>';
+      return;
+    }
+    results.innerHTML = filtered.map(p => `
+      <div class="result-item" onclick="closeSearch(); switchTab('tabHome'); scrollToPost('${p.id}')">
+        <strong>${p.title}</strong> - ${p.userName || 'Unknown'} - ${p.price || 'No price'}
+        ${p.buyers > 0 ? ' ✅' : ''}
+      </div>
+    `).join('');
+  }
+  
+  function scrollToPost(postId) {
+    setTimeout(() => {
+      const card = document.querySelector(`.product-card[data-postid="${postId}"]`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }
+
+  // ============================================================
+  //  BADGE SYSTEM
+  // ============================================================
+  function updateBadges() {
+    const otherMsgs = messages.filter(m => m.userId !== currentUser?.id);
+    const chatBadge = document.getElementById('chatBadge');
+    if (chatBadge) {
+      if (otherMsgs.length > 0 && !document.getElementById('tabChat').classList.contains('active')) {
+        chatBadge.textContent = otherMsgs.length;
+        chatBadge.classList.remove('hidden');
+      } else {
+        chatBadge.classList.add('hidden');
+      }
+    }
+    
+    const homeBadge = document.getElementById('homeBadge');
+    if (homeBadge) {
+      const homeTab = document.getElementById('tabHome');
+      if (!homeTab?.classList.contains('active') && posts.length > 0) {
+        homeBadge.textContent = posts.length;
+        homeBadge.classList.remove('hidden');
+      } else {
+        homeBadge.classList.add('hidden');
+      }
+    }
+    
+    updateNotifBadge();
+  }
+
+  // ============================================================
+  //  FOLLOW
+  // ============================================================
+  async function toggleFollow(targetUserId) {
+    if (!currentUser) { alert('Please login first'); return; }
+    if (targetUserId === currentUser.id) { alert('You cannot follow yourself'); return; }
+    
+    const current = allUsers.find(u => u.id === currentUser.id);
+    if (!current) return;
+    
+    const idx = current.following ? current.following.indexOf(targetUserId) : -1;
+    
+    if (idx > -1) {
+      current.following.splice(idx, 1);
+    } else {
+      if (!current.following) current.following = [];
+      current.following.push(targetUserId);
+      addNotification(`You started following ${allUsers.find(u => u.id === targetUserId)?.name || 'user'}`, 'follow');
+    }
+    
+    await db.ref('users/' + currentUser.id).update({ following: current.following });
+    currentUser.following = current.following;
+    
+    renderAll();
+  }
+  
+  function isFollowingUser(userId) {
+    if (!currentUser) return false;
+    return currentUser.following && currentUser.following.includes(userId);
+  }
+  
+  function getFollowersCount(userId) {
+    const u = allUsers.find(x => x.id === userId);
+    return u ? (u.followers || []).length : 0;
+  }
+  
+  function getCustomerCount(userId) {
+    const userPosts = posts.filter(p => p.userId === userId);
+    let total = 0;
+    userPosts.forEach(p => { total += (p.buyers || 0); });
+    return total;
+  }
+
+  // ============================================================
+  //  RENDER FUNCTIONS
+  // ============================================================
+  function renderAll() {
+    if (!currentUser) return;
+    renderPosts();
+    renderProfilePosts();
+    renderChatUserList();
+    renderChatMessages();
+    renderProfile();
+    renderDrawer();
+    renderNotifications();
+    updateBadges();
+  }
+
+  // ============================================================
+  //  POSTS
+  // ============================================================
+  function renderPosts() {
+    const feed = document.getElementById('productFeed');
+    if (!feed) return;
+    feed.innerHTML = posts.map(p => generateProductCard(p)).join('');
+  }
+
+  function renderProfilePosts() {
+    const container = document.getElementById('profilePosts');
+    if (!container) return;
+    const myPosts = posts.filter(p => p.userId === currentUser?.id);
+    if (myPosts.length === 0) {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#8296b0;">You haven\'t posted anything yet</div>';
+      return;
+    }
+    container.innerHTML = myPosts.map(p => generateProductCard(p)).join('');
+  }
+
+  // ============================================================
+  //  GENERATE PRODUCT CARD
+  // ============================================================
+  function generateProductCard(p) {
+    const user = allUsers.find(u => u.id === p.userId);
+    const sellerName = user ? user.name : 'Unknown';
+    const isFollowing = isFollowingUser(p.userId);
+    const isSeller = currentUser?.id === p.userId;
+    const isApproved = p.approved || false;
+    const buyerName = p.buyerId ? (allUsers.find(u => u.id === p.buyerId)?.name || 'Someone') : null;
+    
+    const imgHtml = p.imageData ? `<img src="${p.imageData}" alt="Product" onclick="event.stopPropagation(); openImageViewer('${p.imageData}')">` : 
+      `<div class="placeholder"><i class="fas fa-image"></i><span>No photo</span></div>`;
+    const avatarHtml = user?.picData ? `<img src="${user.picData}" alt="${sellerName}">` : `<i class="fas fa-user-circle"></i>`;
+    const priceDisplay = p.price ? `<div class="product-price">${p.price} <span class="currency">ETB</span></div>` : '';
+    const isLiked = p.likedBy && p.likedBy.includes(currentUser?.id);
+    
+    const showApprove = isSeller && p.buyerId && !p.approved;
+    const buyerDisplay = p.buyerId && p.approved ? `✅ Sold to ${buyerName}` : '';
+    const pendingDisplay = p.buyerId && !p.approved && !isSeller ? `⏳ Pending approval` : '';
+    
+    return `
+      <div class="product-card" data-postid="${p.id}">
+        <div class="product-img" onclick="openImageViewer('${p.imageData || ''}')">${imgHtml}</div>
+        <div class="product-title">${p.title}</div>
+        ${priceDisplay}
+        <div class="product-meta">
+          <span class="seller" onclick="openProfileModal('${p.userId}')">
+            <span class="avatar">${avatarHtml}</span>
+            ${sellerName}
+          </span>
+          <button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="event.stopPropagation(); toggleFollow('${p.userId}')">
+            ${isFollowing ? 'Following' : 'Follow'}
+          </button>
+        </div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="buy-section">
+          <span><i class="fas fa-shopping-cart"></i> ${p.approved ? 'Sold' : 'Buy'}</span>
+          ${isSeller ? 
+            (showApprove ? 
+              `<button class="approve-btn" onclick="approvePurchase('${p.id}')">✓ Approve</button>` :
+              (p.approved ? `<span class="approve-status show">✅ Approved</span>` : '')
+            ) :
+            (p.approved ? 
+              `<button class="buy-btn bought" disabled><i class="fas fa-check"></i> Buyed ✅</button>` :
+              `<button class="buy-btn" onclick="event.stopPropagation(); initiateBuy('${p.id}')">Buy now</button>`
+            )
+          }
+          ${buyerDisplay ? `<span style="font-size:0.7rem; color:#22c55e; margin-left:8px;">${buyerDisplay}</span>` : ''}
+          ${pendingDisplay ? `<span style="font-size:0.7rem; color:#eab308; margin-left:8px;">${pendingDisplay}</span>` : ''}
+        </div>
+        <div class="payment-methods" id="payment-${p.id}">
+          <div class="method" onclick="selectPaymentMethod('${p.id}', 'bank')">
+            <i class="fas fa-university"></i>
+            <span class="label">Bank:</span> ${p.bank}
+          </div>
+          <div class="method" onclick="selectPaymentMethod('${p.id}', 'telebirr')">
+            <i class="fas fa-comment"></i>
+            <span class="label">Telebirr:</span> ${p.telebirr}
+            <span class="sub-label">(Dial *127#)</span>
+          </div>
+          <div class="method" onclick="selectPaymentMethod('${p.id}', 'ebirr')">
+            <i class="fas fa-mobile-alt"></i>
+            <span class="label">eBirr:</span> ${p.ebirr}
+          </div>
+        </div>
+        <div class="stats-row">
+          <span class="stat-item like-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${p.id}')">
+            <i class="fas fa-heart"></i> <span class="count" id="likes-${p.id}">${p.likes || 0}</span>
+          </span>
+          <span class="stat-item"><i class="fas fa-eye"></i> <span class="count" id="views-${p.id}">${p.views || 0}</span></span>
+          <span class="stat-item"><i class="fas fa-user-check"></i> <span class="count" id="buyers-${p.id}">${p.buyers || 0}</span></span>
+        </div>
+      </div>
+    `;
+  }
+
+  // ============================================================
+  //  POST MODAL WITH PREVIEW - FIXED
+  // ============================================================
+  window.openPostModal = function() {
+    if (!currentUser) { alert('Please login first'); return; }
+    document.getElementById('postModal').classList.add('open');
+    document.getElementById('postImagePreview').innerHTML = `<div class="placeholder"><i class="fas fa-image"></i><span>Select an image</span></div>`;
+    document.getElementById('postImageInput').value = '';
+    document.getElementById('postTitle').value = '';
+    document.getElementById('postPrice').value = '';
+    document.getElementById('postDesc').value = '';
+    document.getElementById('postBank').value = '1000 1234567890 (A. Tadesse)';
+    document.getElementById('postEbirr').value = '0911 223344';
+    document.getElementById('postTelebirr').value = '0922 334455';
+    postImageData = null;
+  };
+
+  // IMAGE PREVIEW - FIXED
+  document.getElementById('postImageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) {
+      postImageData = null;
+      document.getElementById('postImagePreview').innerHTML = `<div class="placeholder"><i class="fas fa-image"></i><span>Select an image</span></div>`;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      postImageData = ev.target.result;
+      document.getElementById('postImagePreview').innerHTML = `<img src="${postImageData}" alt="Preview">`;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function closePostModal() {
+    document.getElementById('postModal').classList.remove('open');
+    postImageData = null;
+  }
+
+  async function confirmPost() {
+    const title = document.getElementById('postTitle').value.trim();
+    const price = document.getElementById('postPrice').value.trim();
+    const desc = document.getElementById('postDesc').value.trim();
+    const bank = document.getElementById('postBank').value.trim();
+    const ebirr = document.getElementById('postEbirr').value.trim();
+    const telebirr = document.getElementById('postTelebirr').value.trim();
+    
+    if (!postImageData) { alert('❌ Please select an image.'); return; }
+    if (!title) { alert('❌ Please enter a product title.'); document.getElementById('postTitle').focus(); return; }
+    if (!price) { alert('❌ Please enter a price.'); document.getElementById('postPrice').focus(); return; }
+    if (!desc) { alert('❌ Please enter a description.'); document.getElementById('postDesc').focus(); return; }
+    if (!bank || !ebirr || !telebirr) { alert('❌ Please enter all payment information.'); return; }
+
+    const newPostRef = db.ref('posts').push();
+    await newPostRef.set({
+      userId: currentUser.id,
+      userName: currentUser.name,
+      title: title,
+      price: price,
+      desc: desc,
+      imageData: postImageData,
+      bank: bank,
+      ebirr: ebirr,
+      telebirr: telebirr,
+      likes: 0,
+      likedBy: [],
+      views: 0,
+      viewed: false,
+      buyers: 0,
+      buyerId: null,
+      approved: false,
+      createdAt: new Date().toISOString()
+    });
+    
+    addNotification(`You posted "${title}" for ${price} ETB`, 'post');
+    closePostModal();
+    alert('✅ Product posted successfully!');
+  }
+
+  // ============================================================
+  //  LOGOUT
+  // ============================================================
+  async function logoutUser() {
+    if (confirm('Are you sure you want to logout?')) {
+      try {
+        await auth.signOut();
+        currentUser = null;
+        closeDrawer();
+        selectedChatUserId = null;
+        document.getElementById('registerOverlay').classList.remove('hidden');
+        addNotification('You have been logged out.', 'system');
+        renderAll();
+      } catch (error) {
+        alert('Logout failed: ' + error.message);
+      }
+    }
+  }
+
+  // ============================================================
+  //  PAYMENT
+  // ============================================================
+  function selectPaymentMethod(postId, method) {
+    if (!currentUser) { alert('Please login first'); return; }
+    pendingPostId = postId;
+    selectedMethod = method;
+    document.querySelectorAll('.payment-methods.open').forEach(el => el.classList.remove('open'));
+    
+    if (method === 'bank') {
+      openEthioPaymentModal('bank', postId);
+    } else if (method === 'telebirr') {
+      openEthioPaymentModal('telebirr', postId);
+    } else if (method === 'ebirr') {
+      openEthioPaymentModal('ebirr', postId);
+    }
+  }
+
+  function openEthioPaymentModal(method, postId) {
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    
+    const modal = document.getElementById('ethioPaymentModal');
+    if (!modal) return;
+    
+    // Set payment method details
+    const title = document.getElementById('ethioPaymentTitle');
+    const icon = document.getElementById('ethioPaymentIcon');
+    const badge = document.getElementById('ethioPaymentBadge');
+    const desc = document.getElementById('ethioPaymentDesc');
+    const instructions = document.getElementById('ethioInstructions');
+    const sellerPhone = document.getElementById('sellerPhoneDisplay');
+    const amountDisplay = document.getElementById('amountDisplay');
+    
+    if (method === 'telebirr') {
+      if (title) title.textContent = 'Telebirr Payment';
+      if (icon) icon.innerHTML = '<i class="fas fa-comment"></i>';
+      if (badge) { badge.textContent = 'Telebirr'; badge.className = 'method-badge telebirr'; }
+      if (desc) desc.textContent = 'Complete your payment using Ethio Telecom\'s Telebirr service. Dial *127# on your Ethio Telecom SIM.';
+      if (sellerPhone) sellerPhone.textContent = p.telebirr || '09XX XXX XXX';
+    } else if (method === 'ebirr') {
+      if (title) title.textContent = 'eBirr Payment';
+      if (icon) icon.innerHTML = '<i class="fas fa-mobile-alt"></i>';
+      if (badge) { badge.textContent = 'eBirr'; badge.className = 'method-badge ebirr'; }
+      if (desc) desc.textContent = 'Complete your payment using eBirr mobile money service.';
+      if (sellerPhone) sellerPhone.textContent = p.ebirr || '09XX XXX XXX';
+    } else {
+      if (title) title.textContent = 'Bank Transfer';
+      if (icon) icon.innerHTML = '<i class="fas fa-university"></i>';
+      if (badge) { badge.textContent = 'Bank'; badge.className = 'method-badge bank'; }
+      if (desc) desc.textContent = 'Complete your payment via bank transfer to the seller\'s account.';
+      if (sellerPhone) sellerPhone.textContent = p.bank || 'Account: 1000 1234567890';
+    }
+    
+    if (amountDisplay) amountDisplay.textContent = p.price || '0 ETB';
+    
+    if (instructions) {
+      if (method === 'telebirr') {
+        instructions.innerHTML = `
+          <div class="step"><span class="num">1</span> Dial <strong>*127#</strong> on your Ethio Telecom SIM</div>
+          <div class="step"><span class="num">2</span> Select "Telebirr" → "Send Money"</div>
+          <div class="step"><span class="num">3</span> Enter seller's Telebirr number: <strong>${p.telebirr || '09XX XXX XXX'}</strong></div>
+          <div class="step"><span class="num">4</span> Enter amount: <strong>${p.price || '0'} ETB</strong></div>
+          <div class="step"><span class="num">5</span> Enter your Telebirr PIN</div>
+          <div class="step"><span class="num">6</span> Copy the transaction ID from the confirmation SMS</div>
+        `;
+      } else if (method === 'ebirr') {
+        instructions.innerHTML = `
+          <div class="step"><span class="num">1</span> Open your eBirr app</div>
+          <div class="step"><span class="num">2</span> Select "Send Money"</div>
+          <div class="step"><span class="num">3</span> Enter seller's eBirr number: <strong>${p.ebirr || '09XX XXX XXX'}</strong></div>
+          <div class="step"><span class="num">4</span> Enter amount: <strong>${p.price || '0'} ETB</strong></div>
+          <div class="step"><span class="num">5</span> Confirm with your eBirr PIN</div>
+          <div class="step"><span class="num">6</span> Copy the transaction ID from the confirmation</div>
+        `;
+      } else {
+        instructions.innerHTML = `
+          <div class="step"><span class="num">1</span> Go to your bank's mobile app or branch</div>
+          <div class="step"><span class="num">2</span> Transfer to seller's account: <strong>${p.bank || 'Account: 1000 1234567890'}</strong></div>
+          <div class="step"><span class="num">3</span> Enter amount: <strong>${p.price || '0'} ETB</strong></div>
+          <div class="step"><span class="num">4</span> Add reference: "Gooroo-${p.id.substring(0, 8)}"</div>
+          <div class="step"><span class="num">5</span> Copy the transaction reference number</div>
+        `;
+      }
+    }
+    
+    document.getElementById('transactionIdInput').value = '';
+    document.getElementById('senderPhoneInput').value = currentUser?.phone || '';
+    document.getElementById('senderNameInput').value = currentUser?.name || '';
+    
+    modal.classList.add('open');
+  }
+
+  function closeEthioPaymentModal() {
+    document.getElementById('ethioPaymentModal').classList.remove('open');
+    pendingPostId = null;
+    selectedMethod = null;
+  }
+
+  async function confirmEthioPayment() {
+    const transactionId = document.getElementById('transactionIdInput').value.trim();
+    const senderPhone = document.getElementById('senderPhoneInput').value.trim();
+    const senderName = document.getElementById('senderNameInput').value.trim();
+    
+    if (!transactionId) {
+      alert('❌ Please enter the transaction ID from your Ethio Telecom confirmation SMS.');
+      document.getElementById('transactionIdInput').focus();
+      return;
+    }
+    if (!senderPhone) {
+      alert('❌ Please enter your phone number.');
+      document.getElementById('senderPhoneInput').focus();
+      return;
+    }
+    if (!senderName) {
+      alert('❌ Please enter your name.');
+      document.getElementById('senderNameInput').focus();
+      return;
+    }
+    
+    if (!pendingPostId) {
+      alert('Error: No product selected.');
+      return;
+    }
+    
+    const p = posts.find(x => x.id === pendingPostId);
+    if (!p) {
+      alert('Error: Product not found.');
+      return;
+    }
+    
+    document.getElementById('ethioPaymentModal').classList.remove('open');
+    
+    await db.ref('posts/' + pendingPostId).update({
+      buyerId: currentUser.id,
+      transactionId: transactionId,
+      senderPhone: senderPhone,
+      senderName: senderName,
+      paymentMethod: selectedMethod
+    });
+    
+    const methodName = selectedMethod === 'telebirr' ? 'Telebirr' : 
+                       selectedMethod === 'ebirr' ? 'eBirr' : 'Bank Transfer';
+    
+    addNotification(`📱 Payment submitted via ${methodName} for "${p.title}". Transaction: ${transactionId}`, 'purchase');
+    
+    const seller = allUsers.find(u => u.id === p.userId);
+    if (seller) {
+      addNotification(`📱 ${currentUser.name} paid via ${methodName} for "${p.title}". Transaction: ${transactionId}`, 'purchase');
+    }
+    
+    await db.ref('messages').push({
+      userId: currentUser.id,
+      text: `✅ Payment completed for "${p.title}" via ${methodName}! Transaction ID: ${transactionId}. Waiting for seller approval.`,
+      timestamp: new Date().toISOString()
+    });
+    
+    document.getElementById('screenshotModal').classList.add('open');
+  }
+
+  // ============================================================
+  //  SCREENSHOT MODAL
+  // ============================================================
+  function closeScreenshotModal() {
+    document.getElementById('screenshotModal').classList.remove('open');
+  }
+
+  async function confirmScreenshot() {
+    const fileInput = document.getElementById('screenshotInput');
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+      alert('⚠️ No screenshot uploaded. The seller may ask for verification.');
+      document.getElementById('screenshotModal').classList.remove('open');
+      renderAll();
+      alert('✅ Payment submitted! Waiting for seller approval.');
+      return;
+    }
+    
+    const file = fileInput.files[0];
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (screenshot).');
+      return;
+    }
+    
+    if (pendingPostId) {
+      try {
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+          const imageData = ev.target.result;
+          await db.ref('posts/' + pendingPostId).update({
+            screenshot: imageData
+          });
+          addNotification('📸 Screenshot uploaded for verification.', 'purchase');
+        };
+        reader.readAsDataURL(file);
+      } catch (error) {
+        console.error('Screenshot upload error:', error);
+      }
+    }
+    
+    document.getElementById('screenshotModal').classList.remove('open');
+    document.getElementById('screenshotInput').value = '';
+    renderAll();
+    alert('✅ Payment submitted! Screenshot uploaded. Waiting for seller approval.');
+  }
+
+  // ============================================================
+  //  APPROVE PURCHASE
+  // ============================================================
+  async function approvePurchase(postId) {
+    if (!currentUser) return;
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    if (p.userId !== currentUser.id) {
+      alert('Only the seller can approve this purchase.');
+      return;
+    }
+    if (p.approved) {
+      alert('This purchase has already been approved.');
+      return;
+    }
+    if (!p.buyerId) {
+      alert('No pending purchase to approve.');
+      return;
+    }
+    
+    const buyer = allUsers.find(u => u.id === p.buyerId);
+    const methodName = p.paymentMethod === 'telebirr' ? 'Telebirr' : 
+                       p.paymentMethod === 'ebirr' ? 'eBirr' : 'Bank Transfer';
+    
+    if (confirm(`Approve this purchase from ${buyer?.name || 'buyer'}?\n\nTransaction ID: ${p.transactionId || 'N/A'}\nMethod: ${methodName}\nPhone: ${p.senderPhone || 'N/A'}`)) {
+      await db.ref('posts/' + postId).update({
+        approved: true,
+        buyers: (p.buyers || 0) + 1
+      });
+      
+      if (buyer) {
+        addNotification(`✅ ${currentUser.name} approved your purchase of "${p.title}"!`, 'purchase');
+      }
+      addNotification(`✅ You approved the purchase of "${p.title}"`, 'purchase');
+      
+      await db.ref('messages').push({
+        userId: currentUser.id,
+        text: `✅ Purchase approved for "${p.title}"! Transaction ${p.transactionId || ''} confirmed.`,
+        timestamp: new Date().toISOString()
+      });
+      
+      alert('✅ Purchase approved! The buyer has been notified.');
+    }
+  }
+
+  // ============================================================
+  //  INITIATE BUY
+  // ============================================================
+  async function initiateBuy(postId) {
+    if (!currentUser) { alert('Please login first'); return; }
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    if (p.userId === currentUser.id) { alert('You cannot buy your own product.'); return; }
+    if (p.approved) { alert('This product has already been sold.'); return; }
+    if (p.buyerId && !p.approved) { alert('This product is pending approval from the seller.'); return; }
+    
+    const paymentDiv = document.getElementById(`payment-${postId}`);
+    if (paymentDiv) {
+      document.querySelectorAll('.payment-methods.open').forEach(el => {
+        if (el.id !== `payment-${postId}`) el.classList.remove('open');
+      });
+      paymentDiv.classList.toggle('open');
+    }
+  }
+
+  // ============================================================
+  //  LIKE
+  // ============================================================
+  async function toggleLike(postId) {
+    if (!currentUser) { alert('Please login first'); return; }
+    const p = posts.find(x => x.id === postId);
+    if (!p) return;
+    let likedBy = p.likedBy || [];
+    let likes = p.likes || 0;
+    
+    const idx = likedBy.indexOf(currentUser.id);
+    if (idx > -1) {
+      likedBy.splice(idx, 1);
+      likes = Math.max(0, likes - 1);
+    } else {
+      likedBy.push(currentUser.id);
+      likes += 1;
+      addNotification(`You liked "${p.title}"`, 'like');
+    }
+    await db.ref('posts/' + postId).update({ likedBy, likes });
+  }
+
+  // ============================================================
+  //  CHAT
+  // ============================================================
+  function renderChatUserList() {
+    const container = document.getElementById('chatUserList');
+    if (!container) return;
+    const otherUsers = allUsers.filter(u => u.id !== currentUser?.id);
+    
+    const usersWithLastMsg = otherUsers.map(u => {
+      const userMsgs = messages.filter(m => m.userId === u.id || (m.userId === currentUser?.id && m.recipientId === u.id));
+      const lastMsg = userMsgs.length > 0 ? userMsgs[userMsgs.length - 1] : null;
+      return { ...u, lastMsg, lastMsgTime: lastMsg ? new Date(lastMsg.timestamp) : new Date(0) };
+    });
+    usersWithLastMsg.sort((a, b) => b.lastMsgTime - a.lastMsgTime);
+
+    container.innerHTML = usersWithLastMsg.map(u => {
+      const avatarHtml = u.picData ? `<img src="${u.picData}" alt="${u.name}">` : `<i class="fas fa-user-circle"></i>`;
+      const unread = messages.filter(m => m.userId === u.id && !m.read).length;
+      const lastMsgText = u.lastMsg ? u.lastMsg.text : 'No messages yet';
+      return `
+        <div class="chat-user-item">
+          <div class="avatar" onclick="openProfileModal('${u.id}')">${avatarHtml}</div>
+          <div class="user-info" onclick="openChat('${u.id}')">
+            <div class="name">${u.name} ${u.isAdmin ? '👑' : ''}</div>
+            <div class="last-msg">${lastMsgText}</div>
+          </div>
+          ${unread > 0 ? `<span class="unread-badge">${unread}</span>` : ''}
+          <div class="user-status">●</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function openChat(userId) {
+    selectedChatUserId = userId;
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
+    document.getElementById('chatEmptyState').style.display = 'none';
+    document.getElementById('chatUserList').style.display = 'none';
+    document.getElementById('chatMessagesContainer').style.display = 'flex';
+    document.getElementById('chatUserName').textContent = user.name;
+    const avatar = document.getElementById('chatAvatar');
+    if (avatar) {
+      if (user.picData) {
+        avatar.innerHTML = `<img src="${user.picData}" alt="${user.name}">`;
+      } else {
+        avatar.innerHTML = `<i class="fas fa-user-circle"></i>`;
+      }
+    }
+    renderChatMessages();
+  }
+
+  function closeChat() {
+    selectedChatUserId = null;
+    document.getElementById('chatEmptyState').style.display = 'block';
+    document.getElementById('chatUserList').style.display = 'flex';
+    document.getElementById('chatMessagesContainer').style.display = 'none';
+    renderChatUserList();
+  }
+
+  function renderChatMessages() {
+    if (!selectedChatUserId) return;
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+    const filtered = messages.filter(m => 
+      (m.userId === currentUser?.id && m.recipientId === selectedChatUserId) ||
+      (m.userId === selectedChatUserId && m.recipientId === currentUser?.id)
+    );
+    filtered.forEach(async m => {
+      if (m.userId === selectedChatUserId && !m.read) {
+        await db.ref('messages/' + m.id).update({ read: true });
+      }
+    });
+
+    container.innerHTML = filtered.map(m => {
+      const isYou = m.userId === currentUser?.id;
+      const sender = allUsers.find(u => u.id === m.userId);
+      const senderName = sender ? sender.name : 'Unknown';
+      const msgClass = isYou ? 'sent' : 'received';
+      return `
+        <div class="chat-message ${msgClass}">
+          <div class="sender">${isYou ? 'You' : senderName}</div>
+          <div class="msg">${m.text}</div>
+          <div class="time">${new Date(m.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+        </div>
+      `;
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+    updateBadges();
+    renderChatUserList();
+  }
+
+  document.getElementById('sendChatBtn').addEventListener('click', async function() {
+    if (!currentUser) { alert('Please login first'); return; }
+    if (!selectedChatUserId) { alert('Select a user to chat with first.'); return; }
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    await db.ref('messages').push({
+      userId: currentUser.id,
+      recipientId: selectedChatUserId,
+      text: text,
+      timestamp: new Date().toISOString(),
+      read: false
+    });
+    input.value = '';
+  });
+
+  document.getElementById('chatInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') document.getElementById('sendChatBtn').click();
+  });
+
+  // ============================================================
+  //  PROFILE
+  // ============================================================
+  function renderProfile() {
+    if (!currentUser) return;
+    document.getElementById('profileName').textContent = currentUser.name + (currentUser.isAdmin ? ' 👑' : '');
+    document.getElementById('profileJoinDate').textContent = new Date(currentUser.joined).toLocaleDateString();
+    
+    const picEl = document.getElementById('profilePic');
+    if (picEl) {
+      if (currentUser.picData) {
+        picEl.innerHTML = `<img src="${currentUser.picData}" alt="Profile"><input type="file" id="profilePicInput" accept="image/*">`;
+      } else {
+        picEl.innerHTML = `<i class="${currentUser.pic || 'fas fa-user-circle'}"></i><input type="file" id="profilePicInput" accept="image/*">`;
+      }
+    }
+
+    const myPosts = posts.filter(p => p.userId === currentUser.id);
+    document.getElementById('countPosts').textContent = myPosts.length;
+    document.getElementById('countFollowers').textContent = getFollowersCount(currentUser.id);
+    document.getElementById('countCustomers').textContent = getCustomerCount(currentUser.id);
+
+    const followingList = document.getElementById('followingList');
+    const followingCount = document.getElementById('followingCount');
+    if (followingList && followingCount) {
+      const followingUsers = allUsers.filter(u => currentUser.following && currentUser.following.includes(u.id));
+      followingCount.textContent = followingUsers.length;
+      followingList.innerHTML = followingUsers.map(u => `
+        <div class="following-item">
+          <span style="cursor:pointer;" onclick="openProfileModal('${u.id}')">
+            <i class="fas fa-user-circle"></i> ${u.name}
+          </span>
+          <button class="follow-btn following" onclick="toggleFollow('${u.id}')">Unfollow</button>
+        </div>
+      `).join('');
+    }
+
+    const picInput = document.getElementById('profilePicInput');
+    if (picInput) {
+      picInput.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async function(ev) {
+          const dataUrl = ev.target.result;
+          await db.ref('users/' + currentUser.id).update({ picData: dataUrl });
+          currentUser.picData = dataUrl;
+          addNotification('Profile picture updated!', 'profile');
+          renderProfile();
+          renderProfilePosts();
+        };
+        reader.readAsDataURL(file);
+      };
+    }
+  }
+
+  // ============================================================
+  //  DRAWER
+  // ============================================================
+  function renderDrawer() {
+    if (!currentUser) return;
+    const myPosts = posts.filter(p => p.userId === currentUser.id);
+    const container = document.getElementById('drawerPostList');
+    if (!container) return;
+    container.innerHTML = myPosts.map(p => `
+      <div class="drawer-item">
+        <span>🔹 ${p.title} - ${p.price || 'No price'} ${p.approved ? '✅ Sold' : p.buyerId ? '⏳ Pending' : ''}</span>
+        <div class="item-actions">
+          <i class="fas fa-edit" onclick="editPost('${p.id}')"></i>
+          <i class="fas fa-trash" onclick="deletePost('${p.id}')"></i>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function deletePost(postId) {
+    if (!currentUser) return;
+    if (confirm('Delete this post?')) {
+      const p = posts.find(x => x.id === postId);
+      await db.ref('posts/' + postId).remove();
+      if (p) addNotification(`You deleted "${p.title}"`, 'delete');
+      closeDrawer();
+    }
+  }
+
+  function editPost(postId) {
+    const editSection = document.getElementById('editSection');
+    if (editSection) {
+      document.getElementById('editInput').value = 'edit description...';
+      editSection.style.display = 'flex';
+      editSection.dataset.editId = postId;
+    }
+  }
+
+  async function saveEdit() {
+    const editSection = document.getElementById('editSection');
+    const input = document.getElementById('editInput');
+    const postId = editSection?.dataset.editId;
+    if (!postId) return;
+    const newDesc = input.value.trim() || 'updated';
+    const p = posts.find(x => x.id === postId);
+    if (p) {
+      await db.ref('posts/' + postId).update({ desc: newDesc });
+      addNotification(`Updated "${p.title}" description`, 'edit');
+    }
+    if (editSection) editSection.style.display = 'none';
+    alert('Post updated');
+    closeDrawer();
+  }
+
+  // ============================================================
+  //  DRAWER TOGGLE
+  // ============================================================
+  const drawer = document.getElementById('settingsDrawer');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const openBtn = document.getElementById('settingsDrawerBtn');
+  const closeBtn = document.getElementById('closeDrawer');
+  
+  function openDrawer() { 
+    if (currentUser) {
+      if (drawer) drawer.classList.add('open');
+      if (backdrop) backdrop.classList.add('active');
+    } 
+  }
+  function closeDrawer() { 
+    if (drawer) drawer.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    const editSection = document.getElementById('editSection');
+    if (editSection) editSection.style.display = 'none';
+  }
+  
+  if (openBtn) {
+    openBtn.addEventListener('click', function(e) { e.stopPropagation(); openDrawer(); });
+  }
+  if (closeBtn) closeBtn.addEventListener('click', closeDrawer);
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  // ============================================================
+  //  TAB SWITCHING
+  // ============================================================
+  function switchTab(tabId) {
+    const headerTabs = document.querySelectorAll('.header-tab');
+    headerTabs.forEach(t => t.classList.remove('active'));
+    const targetTab = document.querySelector(`.header-tab[data-tab="${tabId}"]`);
+    if (targetTab) targetTab.classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const content = document.getElementById(tabId);
+    if (content) content.classList.add('active');
+    closeDrawer();
+    if (tabId === 'tabChat') {
+      closeChat();
+      renderChatUserList();
+    }
+    if (tabId === 'tabProfile') {
+      renderProfile();
+      renderProfilePosts();
+    }
+    if (tabId === 'tabHome') renderPosts();
+    const chatBadge = document.getElementById('chatBadge');
+    if (tabId === 'tabChat' && chatBadge) chatBadge.classList.add('hidden');
+    const homeBadge = document.getElementById('homeBadge');
+    if (tabId === 'tabHome' && homeBadge) homeBadge.classList.add('hidden');
+    updateBadges();
+  }
+
+  document.querySelectorAll('.header-tab').forEach(tab => {
+    tab.addEventListener('click', function() { switchTab(this.dataset.tab); });
+  });
+
+  // ============================================================
+  //  CLOSE MODALS ON BACKDROP
+  // ============================================================
+  document.getElementById('profileModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeProfileModal();
+  });
+  document.getElementById('imageViewer')?.addEventListener('click', function(e) {
+    if (e.target === this) closeImageViewer();
+  });
+  document.getElementById('ethioPaymentModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeEthioPaymentModal();
+  });
+  document.getElementById('screenshotModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeScreenshotModal();
+  });
+
+  // ============================================================
+  //  INIT
+  // ============================================================
+  console.log('✅ Gooroo Marketplace App Loaded!');
+  console.log('📸 Image preview working - select an image to see preview');
+  console.log('🔐 Firebase Authentication Ready');
+  console.log('📱 Ethio Telecom Payment Integration');
+  console.log('💬 Real-time Chat Enabled');
+</script>
+</body>
+</html>
